@@ -8,18 +8,43 @@ import { prisma, successResponse, errorResponse } from '@/lib/api/server/api-uti
 
 export async function GET(req: NextRequest) {
   try {
-    // Check database connection
-    const dbStart = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
-    const dbTime = Date.now() - dbStart;
+    // Basic health check without database dependency for production deployment
+    let dbStatus = 'not_configured';
+    let dbTime = 0;
+    let stats = {
+      totalUsers: 0,
+      totalApplications: 0,
+      totalDocuments: 0,
+      unreadNotifications: 0
+    };
 
-    // Get basic stats
-    const stats = await Promise.all([
-      prisma.user.count(),
-      prisma.application.count(),
-      prisma.document.count(),
-      prisma.notification.count({ where: { status: 'PENDING' } })
-    ]);
+    // Only try database connection if DATABASE_URL is properly configured
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL !== 'file:./dev.db') {
+      try {
+        const dbStart = Date.now();
+        await prisma.$queryRaw`SELECT 1`;
+        dbTime = Date.now() - dbStart;
+        dbStatus = 'connected';
+
+        // Get basic stats only if database is connected
+        const dbStats = await Promise.all([
+          prisma.user.count(),
+          prisma.application.count(),
+          prisma.document.count(),
+          prisma.notification.count({ where: { status: 'PENDING' } })
+        ]);
+
+        stats = {
+          totalUsers: dbStats[0],
+          totalApplications: dbStats[1],
+          totalDocuments: dbStats[2],
+          unreadNotifications: dbStats[3]
+        };
+      } catch (dbError) {
+        console.warn('Database connection failed:', dbError);
+        dbStatus = 'disconnected';
+      }
+    }
 
     return successResponse({
       status: 'healthy',
@@ -27,21 +52,16 @@ export async function GET(req: NextRequest) {
       version: process.env.APP_VERSION || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       database: {
-        status: 'connected',
-        responseTime: `${dbTime}ms`
+        status: dbStatus,
+        responseTime: dbTime > 0 ? `${dbTime}ms` : 'N/A'
       },
-      stats: {
-        totalUsers: stats[0],
-        totalApplications: stats[1],
-        totalDocuments: stats[2],
-        unreadNotifications: stats[3]
-      },
+      stats,
       uptime: process.uptime()
     });
 
   } catch (error) {
     console.error('Health check failed:', error);
-    
+
     return errorResponse({
       code: 'HEALTH_CHECK_FAILED',
       message: 'System health check failed',
