@@ -4,14 +4,15 @@
  */
 
 import { NextRequest } from 'next/server';
-import { 
-  prisma, 
-  successResponse, 
-  errorResponse, 
+import {
+  prisma,
+  successResponse,
+  errorResponse,
   parseRequestBody,
   handleApiError,
   authenticateRequest
 } from '@/lib/api/server/api-utils';
+import { UserRole } from '@/generated/prisma';
 import { ApplicationStatusUpdateSchema } from '@/lib/api/server/validation-schemas';
 
 interface RouteParams {
@@ -222,17 +223,17 @@ function checkStatusUpdatePermissions(
   const { userId, assignedTo } = application;
 
   // Super admin can do anything
-  if (role === 'SUPER_ADMIN') {
+  if (role === UserRole.SUPER_ADMIN) {
     return { allowed: true, message: '' };
   }
 
   // Admin can update most statuses
-  if (role === 'ADMIN') {
+  if (role === UserRole.ADMIN) {
     return { allowed: true, message: '' };
   }
 
   // Consultant can update if assigned to them
-  if (role === 'CONSULTANT' && assignedTo === currentUser.id) {
+  if (role === UserRole.CONSULTANT && assignedTo === currentUser.id) {
     // Consultants cannot cancel applications
     if (newStatus === 'CANCELLED') {
       return { 

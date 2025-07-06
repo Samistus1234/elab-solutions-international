@@ -16,6 +16,7 @@ import {
   createPaginationMeta
 } from '@/lib/api/server/api-utils';
 import { CreateApplicationSchema, ApplicationQuerySchema } from '@/lib/api/server/validation-schemas';
+import { UserRole } from '@/generated/prisma';
 import { z } from 'zod';
 
 // ============================================================================
@@ -75,9 +76,9 @@ export async function GET(req: NextRequest) {
     const where: any = {};
 
     // Role-based filtering
-    if (currentUser.role === 'APPLICANT') {
+    if (currentUser.role === UserRole.APPLICANT) {
       where.userId = currentUser.id;
-    } else if (currentUser.role === 'CONSULTANT') {
+    } else if (currentUser.role === UserRole.CONSULTANT) {
       where.OR = [
         { assignedTo: currentUser.id },
         { userId: currentUser.id }
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status;
     if (priority) where.priority = priority;
     if (assignedTo) where.assignedTo = assignedTo;
-    if (userId && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN')) {
+    if (userId && (currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN)) {
       where.userId = userId;
     }
     if (targetCountry) where.targetCountry = { contains: targetCountry, mode: 'insensitive' };
