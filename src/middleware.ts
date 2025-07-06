@@ -201,6 +201,7 @@ export default async function middleware(request: NextRequest) {
     pathname.includes('.') ||
     pathname.startsWith('/favicon')
   ) {
+    console.log('Skipping middleware for:', pathname);
     return NextResponse.next();
   }
 
