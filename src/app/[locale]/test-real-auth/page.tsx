@@ -36,7 +36,11 @@ export default function TestRealAuthPage() {
   };
 
   const handleRegister = async () => {
-    await register(registerData);
+    await register({
+      ...registerData,
+      confirmPassword: registerData.password,
+      agreeToTerms: true
+    });
   };
 
   const handleLogout = async () => {
