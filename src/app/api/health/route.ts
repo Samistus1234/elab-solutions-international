@@ -6,6 +6,9 @@
 import { NextRequest } from 'next/server';
 import { prisma, successResponse, errorResponse } from '@/lib/api/server/api-utils';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     // Basic health check without database dependency for production deployment
