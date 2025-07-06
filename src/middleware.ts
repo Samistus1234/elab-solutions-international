@@ -194,14 +194,14 @@ function isInstitutionRoute(pathname: string): boolean {
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files and API routes that don't need auth
+  // Skip middleware for static files and ALL API routes
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.includes('.') ||
     pathname.startsWith('/favicon')
   ) {
-    console.log('Skipping middleware for:', pathname);
+    // For API routes, just pass through without any processing
     return NextResponse.next();
   }
 
@@ -256,8 +256,8 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   // Match all pathnames except for
+  // - API routes (completely excluded)
   // - Static files (images, etc.)
   // - Next.js internals
-  // API routes are handled within the middleware logic
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)']
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)']
 };

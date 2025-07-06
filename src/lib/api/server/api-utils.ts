@@ -9,6 +9,7 @@ import { ZodSchema, ZodError } from 'zod';
 import { PrismaClient } from '@/generated/prisma';
 import { verify } from 'jsonwebtoken';
 import type { UserRole } from '@/types/business';
+import { getPrismaClient } from '@/lib/db/setup';
 
 // ============================================================================
 // TYPES
@@ -47,19 +48,8 @@ export interface ApiResponse<T = any> {
 // DATABASE CLIENT
 // ============================================================================
 
-let prisma: PrismaClient;
-
-if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  // Prevent multiple instances during development
-  if (!(global as any).prisma) {
-    (global as any).prisma = new PrismaClient();
-  }
-  prisma = (global as any).prisma;
-}
-
-export { prisma };
+// Use the centralized Prisma client setup
+export const prisma = getPrismaClient();
 
 // ============================================================================
 // RESPONSE HELPERS
