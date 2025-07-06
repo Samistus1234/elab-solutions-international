@@ -255,8 +255,8 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   // Match all pathnames except for
-  // - API routes that don't need auth
   // - Static files (images, etc.)
   // - Next.js internals
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)']
+  // API routes are handled within the middleware logic
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)']
 };
