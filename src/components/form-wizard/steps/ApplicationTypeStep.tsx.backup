@@ -1,0 +1,252 @@
+/**
+ * Application Type Selection Step
+ * 
+ * First step where users select the type of application and target country
+ */
+
+'use client';
+
+import { useFormWizardStore } from '@/lib/form-wizard/form-wizard-store';
+import { ApplicationType } from '@/types/applications';
+import { APPLICATION_TYPE_CONFIGS, type ApplicationTypeErrors } from '@/types/form-wizard';
+import { Clock, MapPin, FileText, CheckCircle } from 'lucide-react';
+
+interface ApplicationTypeStepProps {
+  errors?: ApplicationTypeErrors;
+}
+
+export function ApplicationTypeStep({ errors }: ApplicationTypeStepProps) {
+  const { applicationData, updateApplicationData, clearErrors } = useFormWizardStore();
+
+  const handleApplicationTypeChange = (type: ApplicationType) => {
+    updateApplicationData({ applicationType: type });
+    clearErrors();
+  };
+
+  const handleTargetCountryChange = (country: string) => {
+    updateApplicationData({ targetCountry: country });
+    clearErrors();
+  };
+
+  const handleUrgencyChange = (urgency: 'standard' | 'express' | 'urgent') => {
+    updateApplicationData({ urgency });
+  };
+
+  const selectedConfig = APPLICATION_TYPE_CONFIGS.find(
+    config => config.type === applicationData.applicationType
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Step Description */}
+      <div className="text-center">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Select Your Application Type
+        </h3>
+        <p className="text-gray-600">
+          Choose the type of verification service you need and your target country.
+        </p>
+      </div>
+
+      {/* Application Type Selection */}
+      <div>
+        <label className="text-base font-medium text-gray-900 block mb-4">
+          Application Type *
+        </label>
+        
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {APPLICATION_TYPE_CONFIGS.map((config) => {
+            const isSelected = applicationData.applicationType === config.type;
+            
+            return (
+              <div
+                key={config.type}\n                data-testid={`application-type-${config.type.toLowerCase().replace('_', '-')}`}
+                className={`
+                  relative rounded-lg border-2 p-4 cursor-pointer transition-all
+                  ${isSelected 
+                    ? 'border-primary-500 bg-primary-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                  }
+                `}
+                onClick={() => handleApplicationTypeChange(config.type)}
+              >
+                {/* Selection Indicator */}
+                {isSelected && (
+                  <div className="absolute top-2 right-2">
+                    <CheckCircle className="h-5 w-5 text-primary-500" />
+                  </div>
+                )}
+
+                {/* Icon and Title */}
+                <div className="flex items-center mb-3">
+                  <span className="text-2xl mr-3">{config.icon}</span>
+                  <h4 className="font-medium text-gray-900">{config.name}</h4>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 mb-3">
+                  {config.description}
+                </p>
+
+                {/* Key Details */}
+                <div className="space-y-2">
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {config.estimatedDuration}
+                  </div>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <FileText className="h-3 w-3 mr-1" />
+                    {config.requiredDocuments.length} required documents
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {errors?.applicationType && (
+          <p className="mt-2 text-sm text-red-600">{errors.applicationType}</p>
+        )}
+      </div>
+
+      {/* Target Country Selection */}
+      {selectedConfig && (
+        <div>
+          <label className="text-base font-medium text-gray-900 block mb-4">
+            Target Country *
+          </label>
+          
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {selectedConfig.targetCountries.map((country) => {
+              const isSelected = applicationData.targetCountry === country;
+              
+              return (
+                <button
+                  key={country}\n                  data-testid={`target-country-${country.toLowerCase().replace(/\\s+/g, '-')}`}
+                  onClick={() => handleTargetCountryChange(country)}
+                  className={`
+                    flex items-center justify-center px-4 py-3 border rounded-md text-sm font-medium transition-colors
+                    ${isSelected
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    }
+                  `}
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  {country}
+                </button>
+              );
+            })}
+          </div>
+
+          {errors?.targetCountry && (
+            <p className="mt-2 text-sm text-red-600">{errors.targetCountry}</p>
+          )}
+        </div>
+      )}
+
+      {/* Processing Urgency */}
+      {applicationData.applicationType && applicationData.targetCountry && (
+        <div>
+          <label className="text-base font-medium text-gray-900 block mb-4">
+            Processing Priority
+          </label>
+          
+          <div className="space-y-3">
+            {[
+              {
+                value: 'standard',
+                name: 'Standard Processing',
+                description: 'Regular processing time as indicated above',
+                additionalCost: 'No additional cost'
+              },
+              {
+                value: 'express',
+                name: 'Express Processing',
+                description: '25% faster than standard processing',
+                additionalCost: '+$150 USD'
+              },
+              {
+                value: 'urgent',
+                name: 'Urgent Processing',
+                description: '50% faster than standard processing',
+                additionalCost: '+$300 USD'
+              }
+            ].map((option) => {
+              const isSelected = applicationData.urgency === option.value;
+              
+              return (
+                <label
+                  key={option.value}\n                  data-testid={`processing-priority-${option.value}`}
+                  className={`
+                    relative flex items-start p-4 border rounded-lg cursor-pointer transition-colors
+                    ${isSelected 
+                      ? 'border-primary-500 bg-primary-50' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                    }
+                  `}
+                >
+                  <input
+                    type="radio"
+                    name="urgency"
+                    value={option.value}
+                    checked={isSelected}
+                    onChange={(e) => handleUrgencyChange(e.target.value as any)}
+                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                  />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900">{option.name}</span>
+                      <span className="text-sm font-medium text-gray-600">{option.additionalCost}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{option.description}</p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Application Details Summary */}
+      {selectedConfig && applicationData.targetCountry && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Application Summary</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700 font-medium">Service:</span>
+              <span className="text-blue-900 ml-2">{selectedConfig.name}</span>
+            </div>
+            <div>
+              <span className="text-blue-700 font-medium">Target Country:</span>
+              <span className="text-blue-900 ml-2">{applicationData.targetCountry}</span>
+            </div>
+            <div>
+              <span className="text-blue-700 font-medium">Processing Time:</span>
+              <span className="text-blue-900 ml-2">{selectedConfig.estimatedDuration}</span>
+            </div>
+            <div>
+              <span className="text-blue-700 font-medium">Priority:</span>
+              <span className="text-blue-900 ml-2 capitalize">{applicationData.urgency}</span>
+            </div>
+          </div>
+          
+          {/* Requirements Preview */}
+          <div className="mt-4">
+            <span className="text-blue-700 font-medium text-sm">Required Documents:</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selectedConfig.requiredDocuments.map((doc) => (
+                <span
+                  key={doc}
+                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700"
+                >
+                  {doc.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

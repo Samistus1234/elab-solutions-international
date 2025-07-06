@@ -1,0 +1,396 @@
+/**
+ * Authentication Middleware for ELAB Solutions International
+ * 
+ * This middleware handles authentication, authorization, and internationalization
+ * for the Next.js application with enterprise-grade security features.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import createIntlMiddleware from 'next-intl/middleware';
+import type { JWTPayload, Permission } from '@/types/auth';
+import type { UserRole } from '@/types/business';
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+const locales = ['en', 'ar', 'fr'] as const;
+const defaultLocale = 'en';
+
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  '/',
+  '/about',
+  '/services',
+  '/contact',
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+  '/privacy',
+  '/terms',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/verify-email',
+  '/api/auth/refresh',
+  '/api/health'
+];
+
+// Routes that require authentication
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/profile',
+  '/applications',
+  '/documents',
+  '/payments',
+  '/academy',
+  '/settings'
+];
+
+// Admin-only routes
+const ADMIN_ROUTES = [
+  '/admin',
+  '/admin/users',
+  '/admin/applications',
+  '/admin/analytics',
+  '/admin/settings'
+];
+
+// API routes that require authentication
+const PROTECTED_API_ROUTES = [
+  '/api/user',
+  '/api/applications',
+  '/api/documents',
+  '/api/payments',
+  '/api/notifications'
+];
+
+// ============================================================================
+// MIDDLEWARE IMPLEMENTATION
+// ============================================================================
+
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Handle internationalization first
+  const intlMiddleware = createIntlMiddleware({
+    locales,
+    defaultLocale,
+    localePrefix: 'always'
+  });
+
+  // Apply internationalization
+  const intlResponse = intlMiddleware(request);
+  
+  // Extract locale from pathname
+  const locale = getLocaleFromPathname(pathname);
+  const pathWithoutLocale = removeLocaleFromPathname(pathname, locale);
+
+  // Skip middleware for static files and Next.js internals
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/_next') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/favicon')
+  ) {
+    return intlResponse;
+  }
+
+  // Check if route requires authentication
+  const requiresAuth = isProtectedRoute(pathWithoutLocale);
+  const requiresAdmin = isAdminRoute(pathWithoutLocale);
+  const isApiRoute = pathname.startsWith('/api');
+
+  if (!requiresAuth && !requiresAdmin) {
+    return intlResponse;
+  }
+
+  // Get authentication token
+  const token = getAuthToken(request);
+
+  if (!token) {
+    return redirectToLogin(request, locale);
+  }
+
+  // Verify and decode token
+  const payload = await verifyToken(token);
+
+  if (!payload) {
+    return redirectToLogin(request, locale);
+  }
+
+  // Check if token is expired
+  if (isTokenExpired(payload)) {
+    return redirectToLogin(request, locale);
+  }
+
+  // Check admin access
+  if (requiresAdmin && !hasAdminAccess(payload)) {
+    return redirectToUnauthorized(request, locale);
+  }
+
+  // Check API route permissions
+  if (isApiRoute && isProtectedApiRoute(pathWithoutLocale)) {
+    const hasPermission = await checkApiPermission(pathWithoutLocale, payload);
+    if (!hasPermission) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Insufficient permissions' }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  }
+
+  // Add user context to headers for API routes
+  if (isApiRoute) {
+    const response = NextResponse.next();
+    response.headers.set('x-user-id', payload.sub);
+    response.headers.set('x-user-role', payload.role);
+    response.headers.set('x-session-id', payload.sessionId);
+    return response;
+  }
+
+  // Log security event for sensitive routes
+  if (requiresAdmin || isSensitiveRoute(pathWithoutLocale)) {
+    await logSecurityEvent({
+      type: 'route_access',
+      userId: payload.sub,
+      sessionId: payload.sessionId,
+      route: pathWithoutLocale,
+      userAgent: request.headers.get('user-agent') || '',
+      ipAddress: getClientIP(request)
+    });
+  }
+
+  return intlResponse;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Extract locale from pathname
+ */
+function getLocaleFromPathname(pathname: string): string {
+  const segments = pathname.split('/');
+  const potentialLocale = segments[1];
+  
+  if (locales.includes(potentialLocale as any)) {
+    return potentialLocale;
+  }
+  
+  return defaultLocale;
+}
+
+/**
+ * Remove locale from pathname
+ */
+function removeLocaleFromPathname(pathname: string, locale: string): string {
+  if (pathname.startsWith(`/${locale}`)) {
+    return pathname.slice(locale.length + 1) || '/';
+  }
+  return pathname;
+}
+
+/**
+ * Check if route requires authentication
+ */
+function isProtectedRoute(pathname: string): boolean {
+  return PROTECTED_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+/**
+ * Check if route requires admin access
+ */
+function isAdminRoute(pathname: string): boolean {
+  return ADMIN_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+/**
+ * Check if API route requires authentication
+ */
+function isProtectedApiRoute(pathname: string): boolean {
+  return PROTECTED_API_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+/**
+ * Check if route is sensitive and requires logging
+ */
+function isSensitiveRoute(pathname: string): boolean {
+  const sensitiveRoutes = [
+    '/admin',
+    '/payments',
+    '/documents',
+    '/settings'
+  ];
+  
+  return sensitiveRoutes.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+/**
+ * Get authentication token from request
+ */
+function getAuthToken(request: NextRequest): string | null {
+  // Try Authorization header first
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.slice(7);
+  }
+
+  // Try cookie as fallback
+  const tokenCookie = request.cookies.get('auth_token');
+  if (tokenCookie) {
+    return tokenCookie.value;
+  }
+
+  return null;
+}
+
+/**
+ * Verify and decode JWT token
+ */
+async function verifyToken(token: string): Promise<JWTPayload | null> {
+  try {
+    // In a real implementation, this would verify the token signature
+    // For now, we'll just decode the payload
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // Basic validation
+    if (!payload.sub || !payload.role || !payload.exp) {
+      return null;
+    }
+
+    return payload as JWTPayload;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if token is expired
+ */
+function isTokenExpired(payload: JWTPayload): boolean {
+  const now = Math.floor(Date.now() / 1000);
+  return payload.exp < now;
+}
+
+/**
+ * Check if user has admin access
+ */
+function hasAdminAccess(payload: JWTPayload): boolean {
+  const adminRoles: UserRole[] = ['admin', 'super_admin'];
+  return adminRoles.includes(payload.role as UserRole);
+}
+
+/**
+ * Check API route permissions
+ */
+async function checkApiPermission(pathname: string, payload: JWTPayload): Promise<boolean> {
+  // Define permission requirements for API routes
+  const apiPermissions: Record<string, Permission[]> = {
+    '/api/user': ['view:users'],
+    '/api/applications': ['view:applications'],
+    '/api/documents': ['view:documents'],
+    '/api/payments': ['view:payments'],
+    '/api/admin': ['manage:settings']
+  };
+
+  const requiredPermissions = apiPermissions[pathname] || [];
+  const userPermissions = payload.permissions || [];
+
+  return requiredPermissions.every(permission => 
+    userPermissions.includes(permission)
+  );
+}
+
+/**
+ * Get client IP address
+ */
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  
+  if (realIP) {
+    return realIP;
+  }
+  
+  return request.ip || 'unknown';
+}
+
+/**
+ * Redirect to login page
+ */
+function redirectToLogin(request: NextRequest, locale: string): NextResponse {
+  const loginUrl = new URL(`/${locale}/auth/login`, request.url);
+  loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+  
+  return NextResponse.redirect(loginUrl);
+}
+
+/**
+ * Redirect to unauthorized page
+ */
+function redirectToUnauthorized(request: NextRequest, locale: string): NextResponse {
+  const unauthorizedUrl = new URL(`/${locale}/unauthorized`, request.url);
+  return NextResponse.redirect(unauthorizedUrl);
+}
+
+/**
+ * Log security events
+ */
+async function logSecurityEvent(event: {
+  type: string;
+  userId: string;
+  sessionId: string;
+  route: string;
+  userAgent: string;
+  ipAddress: string;
+}): Promise<void> {
+  try {
+    // In a real implementation, this would send to a logging service
+    console.log('Security Event:', {
+      ...event,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Failed to log security event:', error);
+  }
+}
+
+// ============================================================================
+// MIDDLEWARE CONFIGURATION
+// ============================================================================
+
+export const config = {
+  matcher: [
+    // Match all pathnames except for
+    // - api routes that don't need middleware
+    // - _next/static (static files)
+    // - _next/image (image optimization files)
+    // - favicon.ico (favicon file)
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+};

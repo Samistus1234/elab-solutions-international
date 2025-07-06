@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  emailVerified       DateTime?
+  passwordHash        String?
+  role                UserRole       @default(APPLICANT)
+  status              UserStatus     @default(PENDING_VERIFICATION)
+  firstName           String
+  lastName            String
+  phone               String?
+  phoneVerified       DateTime?
+  country             String
+  profession          String
+  avatar              String?
+  dateOfBirth         DateTime?
+  gender              String?
+  preferences         Json           @default("{}")
+  lastLoginAt         DateTime?
+  lastActivityAt      DateTime?
+  failedLoginAttempts Int            @default(0)
+  lockedUntil         DateTime?
+  consentGiven        Boolean        @default(false)
+  consentDate         DateTime?
+  dataRetentionUntil  DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  applications        Application[]
+  auditLogs           AuditLog[]
+  documents           Document[]
+  notifications       Notification[]
+  payments            Payment[]
+  sessions            Session[]
+
+  @@index([email])
+  @@index([role, status])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  refreshToken String?  @unique
+  accessToken  String?
+  expiresAt    DateTime
+  deviceInfo   Json     @default("{}")
+  ipAddress    String?
+  userAgent    String?
+  isActive     Boolean  @default(true)
+  lastUsedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Application {
+  id                  String              @id @default(cuid())
+  userId              String
+  type                ApplicationType
+  status              ApplicationStatus   @default(DRAFT)
+  priority            ApplicationPriority @default(MEDIUM)
+  personalInfo        Json                @default("{}")
+  targetCountry       String?
+  targetProfession    String?
+  additionalData      Json                @default("{}")
+  currentStep         String?
+  workflowState       Json                @default("{}")
+  assignedTo          String?
+  estimatedCompletion DateTime?
+  actualCompletion    DateTime?
+  submittedAt         DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents           Document[]
+  payments            Payment[]
+  workflowSteps       WorkflowStep[]
+
+  @@index([userId])
+  @@index([type, status])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("applications")
+}
+
+model Document {
+  id                 String             @id @default(cuid())
+  userId             String
+  applicationId      String?
+  name               String
+  type               DocumentType
+  originalName       String
+  mimeType           String
+  size               Int
+  url                String
+  storageKey         String
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  verificationNotes  String?
+  expiryDate         DateTime?
+  isEncrypted        Boolean            @default(true)
+  accessLevel        String             @default("private")
+  uploadedAt         DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  application        Application?       @relation(fields: [applicationId], references: [id])
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([applicationId])
+  @@index([type, verificationStatus])
+  @@index([uploadedAt])
+  @@map("documents")
+}
+
+model WorkflowStep {
+  id            String      @id @default(cuid())
+  applicationId String
+  stepName      String
+  stepOrder     Int
+  status        String      @default("pending")
+  data          Json        @default("{}")
+  notes         String?
+  assignedTo    String?
+  completedBy   String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  dueDate       DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([status])
+  @@index([assignedTo])
+  @@map("workflow_steps")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  userId        String
+  applicationId String?
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("USD")
+  status        PaymentStatus @default(PENDING)
+  gateway       String
+  gatewayId     String?
+  gatewayData   Json          @default("{}")
+  description   String
+  reference     String        @unique
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  application   Application?  @relation(fields: [applicationId], references: [id])
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([applicationId])
+  @@index([status])
+  @@index([reference])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model Notification {
+  id           String             @id @default(cuid())
+  userId       String
+  title        String
+  message      String
+  type         NotificationType
+  status       NotificationStatus @default(PENDING)
+  channel      String
+  recipient    String
+  data         Json               @default("{}")
+  priority     String             @default("normal")
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([scheduledFor])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  resource   String
+  resourceId String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  sessionId  String?
+  reason     String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  APPLICANT
+  CONSULTANT
+  ADMIN
+  PARTNER
+  INSTITUTION
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum ApplicationType {
+  DATAFLOW
+  LICENSING
+  PLACEMENT
+  EXAM_PREP
+  CREDENTIAL_EVALUATION
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  PENDING_DOCUMENTS
+  PENDING_PAYMENT
+  PROCESSING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum DocumentType {
+  PASSPORT
+  DEGREE_CERTIFICATE
+  TRANSCRIPT
+  LICENSE
+  EXPERIENCE_LETTER
+  IELTS_CERTIFICATE
+  OET_CERTIFICATE
+  DATAFLOW_REPORT
+  MEDICAL_CERTIFICATE
+  POLICE_CLEARANCE
+  OTHER
+}
+
+enum VerificationStatus {
+  PENDING
+  IN_PROGRESS
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}

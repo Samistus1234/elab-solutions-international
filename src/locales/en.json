@@ -1,0 +1,122 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "centralOps": "CentralOps",
+    "academy": "ELAB Academy",
+    "careers": "Global Hire",
+    "about": "About Us",
+    "contact": "Contact",
+    "login": "LOGIN",
+    "getStarted": "GET STARTED",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
+  },
+  "hero": {
+    "title": "Your Gateway to",
+    "titleHighlight": "Global Healthcare",
+    "titleEnd": "Opportunities",
+    "subtitle": "eLab Solutions International - Leading provider of healthcare credentialing, regulatory licensing, and placement services connecting professionals to opportunities in the Gulf region and beyond.",
+    "cta": {
+      "services": "Explore Our Services",
+      "platform": "Try CentralOps Platform"
+    },
+    "stats": {
+      "standards": "ISO Certified Standards",
+      "countries": "Operating in 15+ Countries",
+      "professionals": "Placed 10K+ Professionals"
+    }
+  },
+  "services": {
+    "title": "Comprehensive Healthcare Solutions",
+    "subtitle": "From credentialing to placement, we provide end-to-end services to advance your healthcare career globally",
+    "dataflow": {
+      "title": "DataFlow Verification",
+      "description": "Comprehensive primary source verification services for healthcare professionals seeking opportunities in the Gulf region.",
+      "features": ["Document Authentication", "License Verification", "Experience Validation"]
+    },
+    "licensing": {
+      "title": "Regulatory Licensing",
+      "description": "Expert assistance with regulatory body applications and healthcare licensing across multiple jurisdictions.",
+      "features": ["DHA/HAAD/MOH", "SCFHS Registration", "International Licensing"]
+    },
+    "exam": {
+      "title": "Exam Preparation",
+      "description": "Comprehensive exam preparation through ELAB Academy with AI-powered tutors and extensive question banks.",
+      "features": ["NCLEX-RN", "Prometric Exams", "Language Proficiency"]
+    },
+    "placement": {
+      "title": "Global Placement",
+      "description": "Connect with top healthcare institutions worldwide through our extensive network and placement services.",
+      "features": ["Job Matching", "Interview Prep", "Relocation Support"]
+    },
+    "learnMore": "Learn More",
+    "viewAll": "View All Services"
+  },
+  "stats": {
+    "title": "Trusted by Healthcare Professionals Worldwide",
+    "subtitle": "Our track record speaks for itself - delivering excellence in healthcare credentialing and placement services",
+    "professionals": {
+      "value": "10,000+",
+      "label": "Healthcare Professionals Placed",
+      "description": "Successfully placed in top institutions"
+    },
+    "countries": {
+      "value": "15+",
+      "label": "Countries Served",
+      "description": "Global reach across continents"
+    },
+    "successRate": {
+      "value": "98%",
+      "label": "Success Rate",
+      "description": "In credentialing and licensing"
+    },
+    "processing": {
+      "value": "48hrs",
+      "label": "Average Processing Time",
+      "description": "Fast-track verification services"
+    }
+  },
+  "testimonials": {
+    "title": "Success Stories from Our Clients",
+    "subtitle": "Join thousands of healthcare professionals who have advanced their careers with our support"
+  },
+  "news": {
+    "title": "Latest News & Updates",
+    "subtitle": "Stay informed about the latest developments in healthcare credentialing and our services",
+    "readMore": "Read More",
+    "viewAll": "View All News"
+  },
+  "cta": {
+    "title": "Ready to Advance Your Healthcare Career?",
+    "subtitle": "Join thousands of healthcare professionals who have successfully navigated their journey to international opportunities with eLab Solutions",
+    "benefits": ["Fast-track processing", "Expert guidance", "Transparent pricing", "24/7 support"],
+    "buttons": {
+      "getStarted": "Get Started Today",
+      "explore": "Explore Our Services"
+    },
+    "contact": {
+      "text": "Questions? Call us at",
+      "email": "or email"
+    }
+  },
+  "footer": {
+    "description": "Your trusted partner for healthcare credentialing, regulatory licensing, and global placement services.",
+    "links": {
+      "services": "Services",
+      "company": "Company",
+      "resources": "Resources",
+      "support": "Support"
+    },
+    "contact": "Contact",
+    "locations": {
+      "lagos": "Lagos, Nigeria",
+      "dubai": "Dubai, UAE",
+      "riyadh": "Riyadh, Saudi Arabia"
+    },
+    "copyright": "© 2024 eLab Solutions International. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "cookies": "Cookie Policy"
+  }
+}

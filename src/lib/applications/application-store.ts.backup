@@ -1,0 +1,588 @@
+/**
+ * Application State Management Store
+ * 
+ * Manages application data, real-time updates, and role-based access
+ */
+
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import {
+  ApplicationType,
+  ApplicationStatus,
+  ApplicationStage,
+  DocumentType,
+  Priority,
+  type Application,
+  type Document,
+  type Message,
+  type Payment,
+  type TimelineEvent,
+  type AdminDashboardSummary,
+  type ConsultantDashboardSummary,
+  type ApplicantDashboardSummary,
+  type ApplicationFilters,
+  type CreateApplicationRequest,
+  type UpdateApplicationRequest,
+  type UploadDocumentRequest,
+  type ReviewDocumentRequest,
+  type SendMessageRequest
+} from '@/types/applications';
+import { UserRole } from '@/types/business';
+import { useAuthStore } from '@/lib/auth/auth-store';
+
+// ============================================================================
+// APPLICATION STORE INTERFACE
+// ============================================================================
+
+interface ApplicationState {
+  // Data
+  applications: Application[];
+  selectedApplication: Application | null;
+  dashboardSummary: AdminDashboardSummary | ConsultantDashboardSummary | ApplicantDashboardSummary | null;
+  
+  // UI State
+  loading: boolean;
+  error: string | null;
+  filters: ApplicationFilters;
+  searchQuery: string;
+  
+  // Real-time updates
+  lastUpdateTimestamp: string | null;
+  unreadNotifications: number;
+}
+
+interface ApplicationActions {
+  // Data fetching
+  fetchApplications: (filters?: ApplicationFilters) => Promise<void>;
+  fetchApplication: (id: string) => Promise<void>;
+  fetchDashboardSummary: () => Promise<void>;
+  
+  // Application management
+  createApplication: (data: CreateApplicationRequest) => Promise<string>;
+  updateApplication: (id: string, data: UpdateApplicationRequest) => Promise<void>;
+  deleteApplication: (id: string) => Promise<void>;
+  
+  // Document management
+  uploadDocument: (data: UploadDocumentRequest) => Promise<void>;
+  reviewDocument: (documentId: string, data: ReviewDocumentRequest) => Promise<void>;
+  downloadDocument: (documentId: string) => Promise<void>;
+  
+  // Communication
+  sendMessage: (data: SendMessageRequest) => Promise<void>;
+  markMessageAsRead: (messageId: string) => Promise<void>;
+  
+  // Stage management
+  moveToNextStage: (applicationId: string) => Promise<void>;
+  moveToPreviousStage: (applicationId: string) => Promise<void>;
+  updateStage: (applicationId: string, stage: ApplicationStage) => Promise<void>;
+  
+  // UI actions
+  setSelectedApplication: (application: Application | null) => void;
+  setFilters: (filters: ApplicationFilters) => void;
+  setSearchQuery: (query: string) => void;
+  clearError: () => void;
+  
+  // Real-time updates
+  subscribeToUpdates: () => void;
+  unsubscribeFromUpdates: () => void;
+  handleRealtimeUpdate: (update: any) => void;
+}
+
+type ApplicationStore = ApplicationState & ApplicationActions;
+
+// ============================================================================
+// MOCK DATA GENERATORS
+// ============================================================================
+
+const generateMockApplications = (userRole: UserRole, userId: string): Application[] => {
+  const baseApplications: Partial<Application>[] = [
+    {
+      id: 'app-001',
+      type: ApplicationType.DATAFLOW,
+      title: 'DataFlow Verification - John Smith',
+      status: ApplicationStatus.IN_PROGRESS,
+      stage: ApplicationStage.DOCUMENTS_REVIEWED,
+      targetCountry: 'UAE',
+      priority: Priority.HIGH
+    },
+    {
+      id: 'app-002', 
+      type: ApplicationType.MUMARIS_PLUS,
+      title: 'MUMARIS+ Credentialing - Sarah Johnson',
+      status: ApplicationStatus.PENDING_DOCUMENTS,
+      stage: ApplicationStage.DOCUMENTS_COLLECTED,
+      targetCountry: 'Saudi Arabia',
+      priority: Priority.MEDIUM
+    },
+    {
+      id: 'app-003',
+      type: ApplicationType.LICENSE_RENEWAL,
+      title: 'License Renewal - Dr. Ahmed Hassan',
+      status: ApplicationStatus.UNDER_REVIEW,
+      stage: ApplicationStage.APPLICATION_PREPARED,
+      targetCountry: 'Qatar',
+      priority: Priority.LOW
+    }
+  ];
+
+  return baseApplications.map((app, index) => ({
+    id: app.id!,
+    type: app.type!,
+    applicantId: userRole === 'applicant' ? userId : `user-${index + 1}`,
+    consultantId: userRole === 'consultant' ? userId : `consultant-${index + 1}`,
+    status: app.status!,
+    stage: app.stage!,
+    priority: app.priority as any,
+    title: app.title!,
+    description: `Application for ${app.title}`,
+    targetCountry: app.targetCountry!,
+    estimatedCompletion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    documents: generateMockDocuments(app.id!),
+    payments: generateMockPayments(app.id!),
+    communications: [],
+    timeline: generateMockTimeline(app.id!),
+    metadata: { tags: ['urgent'], customFields: {} },
+    createdAt: new Date(Date.now() - index * 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date().toISOString()
+  })) as Application[];
+};
+
+const generateMockDocuments = (applicationId: string): Document[] => [
+  {
+    id: `doc-${applicationId}-1`,
+    applicationId,
+    type: 'international_passport' as any,
+    status: 'approved' as any,
+    title: 'International Passport',
+    fileName: 'passport.pdf',
+    fileUrl: '/mock/documents/passport.pdf',
+    fileSize: 2048576,
+    mimeType: 'application/pdf',
+    uploadedBy: 'user-1',
+    reviewedBy: 'consultant-1',
+    reviewComments: 'Document approved - clear and valid',
+    isRequired: true,
+    uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    reviewedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: `doc-${applicationId}-2`,
+    applicationId,
+    type: 'education_document' as any,
+    status: 'pending' as any,
+    title: 'Education Certificate',
+    fileName: 'education_cert.pdf',
+    fileUrl: '/mock/documents/education.pdf',
+    fileSize: 1024576,
+    mimeType: 'application/pdf',
+    uploadedBy: 'user-1',
+    isRequired: true,
+    uploadedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+  }
+];
+
+const generateMockPayments = (applicationId: string): Payment[] => [
+  {
+    id: `pay-${applicationId}-1`,
+    applicationId,
+    amount: 500,
+    currency: 'USD',
+    status: 'paid' as any,
+    description: 'Application processing fee',
+    paymentMethod: 'credit_card',
+    transactionId: 'txn_123456789',
+    paidAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+  }
+];
+
+const generateMockTimeline = (applicationId: string): TimelineEvent[] => [
+  {
+    id: `timeline-${applicationId}-1`,
+    applicationId,
+    userId: 'consultant-1',
+    type: 'status_change',
+    title: 'Application Created',
+    description: 'Application has been created and assigned to consultant',
+    newValue: 'in_progress',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: `timeline-${applicationId}-2`,
+    applicationId,
+    userId: 'user-1',
+    type: 'document_upload',
+    title: 'Documents Uploaded',
+    description: 'Applicant uploaded required documents',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+  }
+];
+
+// ============================================================================
+// APPLICATION STORE IMPLEMENTATION
+// ============================================================================
+
+const useApplicationStore = create<ApplicationStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        // Initial state
+        applications: [],
+        selectedApplication: null,
+        dashboardSummary: null,
+        loading: false,
+        error: null,
+        filters: {},
+        searchQuery: '',
+        lastUpdateTimestamp: null,
+        unreadNotifications: 0,
+
+        // Data fetching
+        fetchApplications: async (filters?: ApplicationFilters) => {
+          set({ loading: true, error: null });
+          
+          try {
+            const authStore = useAuthStore.getState();
+            const user = authStore.user;
+            
+            if (!user) {
+              throw new Error('User not authenticated');
+            }
+
+            // Simulate API call with mock data
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const applications = generateMockApplications(user.role, user.id);
+            
+            set({ 
+              applications,
+              loading: false,
+              lastUpdateTimestamp: new Date().toISOString()
+            });
+          } catch (error) {
+            set({ 
+              loading: false, 
+              error: error instanceof Error ? error.message : 'Failed to fetch applications'
+            });
+          }
+        },
+
+        fetchApplication: async (id: string) => {
+          set({ loading: true, error: null });
+          
+          try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const application = get().applications.find(app => app.id === id);
+            if (!application) {
+              throw new Error('Application not found');
+            }
+            
+            set({ selectedApplication: application, loading: false });
+          } catch (error) {
+            set({ 
+              loading: false, 
+              error: error instanceof Error ? error.message : 'Failed to fetch application'
+            });
+          }
+        },
+
+        fetchDashboardSummary: async () => {
+          set({ loading: true, error: null });
+          
+          try {
+            const authStore = useAuthStore.getState();
+            const user = authStore.user;
+            
+            if (!user) {
+              throw new Error('User not authenticated');
+            }
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Generate role-specific dashboard summary
+            let summary;
+            const applications = get().applications;
+            
+            const baseSummary = {
+              totalApplications: applications.length,
+              activeApplications: applications.filter(app => 
+                app.status === ApplicationStatus.IN_PROGRESS || 
+                app.status === ApplicationStatus.UNDER_REVIEW
+              ).length,
+              completedApplications: applications.filter(app => 
+                app.status === ApplicationStatus.COMPLETED
+              ).length,
+              pendingDocuments: applications.reduce((sum, app) => 
+                sum + app.documents.filter(doc => doc.status === 'pending').length, 0
+              ),
+              pendingPayments: applications.reduce((sum, app) => 
+                sum + app.payments.filter(payment => payment.status === 'pending').length, 0
+              ),
+              recentActivity: applications.flatMap(app => app.timeline).slice(0, 5)
+            };
+
+            if (user.role === 'super_admin' || user.role === 'admin') {
+              summary = {
+                ...baseSummary,
+                consultantWorkload: [],
+                applicationsByType: {
+                  [ApplicationType.DATAFLOW]: 15,
+                  [ApplicationType.MUMARIS_PLUS]: 8,
+                  [ApplicationType.SHERYAN]: 5,
+                  [ApplicationType.DATAFLOW_VERIFICATION]: 12,
+                  [ApplicationType.LICENSE_RENEWAL]: 7,
+                  [ApplicationType.EXAM_BOOKING]: 3
+                },
+                applicationsByStage: {
+                  [ApplicationStage.CREATED]: 5,
+                  [ApplicationStage.DOCUMENTS_COLLECTED]: 8,
+                  [ApplicationStage.DOCUMENTS_REVIEWED]: 12,
+                  [ApplicationStage.APPLICATION_PREPARED]: 6,
+                  [ApplicationStage.SUBMITTED_TO_AUTHORITY]: 10,
+                  [ApplicationStage.AUTHORITY_PROCESSING]: 7,
+                  [ApplicationStage.RESULTS_RECEIVED]: 2,
+                  [ApplicationStage.COMPLETED]: 25
+                },
+                averageProcessingTime: 21, // days
+                revenue: {
+                  totalRevenue: 125000,
+                  pendingRevenue: 15000,
+                  monthlyRevenue: 45000,
+                  revenueByType: {
+                    [ApplicationType.DATAFLOW]: 75000,
+                    [ApplicationType.MUMARIS_PLUS]: 30000,
+                    [ApplicationType.SHERYAN]: 20000,
+                    [ApplicationType.DATAFLOW_VERIFICATION]: 0,
+                    [ApplicationType.LICENSE_RENEWAL]: 0,
+                    [ApplicationType.EXAM_BOOKING]: 0
+                  }
+                }
+              } as AdminDashboardSummary;
+            } else if (user.role === 'consultant') {
+              summary = {
+                ...baseSummary,
+                assignedApplications: applications.filter(app => app.consultantId === user.id).length,
+                avgProcessingTime: 18, // days
+                performanceScore: 92, // percentage
+                urgentApplications: applications.filter(app => app.priority === 'high' || app.priority === 'urgent').length
+              } as ConsultantDashboardSummary;
+            } else {
+              summary = {
+                ...baseSummary,
+                nextActions: [
+                  {
+                    id: 'action-1',
+                    applicationId: 'app-001',
+                    title: 'Upload Education Certificate',
+                    description: 'Please upload your education certificate to proceed',
+                    priority: Priority.HIGH as any,
+                    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+                  }
+                ],
+                upcomingDeadlines: [],
+                documentsNeeded: ['education_document' as any]
+              } as ApplicantDashboardSummary;
+            }
+            
+            set({ dashboardSummary: summary, loading: false });
+          } catch (error) {
+            set({ 
+              loading: false, 
+              error: error instanceof Error ? error.message : 'Failed to fetch dashboard summary'
+            });
+          }
+        },
+
+        // Application management (mock implementations)
+        createApplication: async (data: CreateApplicationRequest) => {
+          set({ loading: true, error: null });
+          
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const newApp: Application = {
+              id: `app-${Date.now()}`,
+              type: data.type,
+              applicantId: data.applicantId,
+              consultantId: data.consultantId,
+              status: ApplicationStatus.DRAFT,
+              stage: ApplicationStage.CREATED,
+              priority: data.priority || 'medium' as any,
+              title: data.title,
+              description: data.description,
+              targetCountry: data.targetCountry,
+              documents: [],
+              payments: [],
+              communications: [],
+              timeline: [],
+              metadata: data.metadata || { customFields: {} },
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            
+            set(state => ({
+              applications: [newApp, ...state.applications],
+              loading: false
+            }));
+            
+            return newApp.id;
+          } catch (error) {
+            set({ 
+              loading: false, 
+              error: error instanceof Error ? error.message : 'Failed to create application'
+            });
+            throw error;
+          }
+        },
+
+        updateApplication: async (id: string, data: UpdateApplicationRequest) => {
+          set({ loading: true, error: null });
+          
+          try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            set(state => ({
+              applications: state.applications.map(app => 
+                app.id === id 
+                  ? { ...app, ...data, updatedAt: new Date().toISOString() }
+                  : app
+              ),
+              selectedApplication: state.selectedApplication?.id === id 
+                ? { ...state.selectedApplication, ...data, updatedAt: new Date().toISOString() }
+                : state.selectedApplication,
+              loading: false
+            }));
+          } catch (error) {
+            set({ 
+              loading: false, 
+              error: error instanceof Error ? error.message : 'Failed to update application'
+            });
+          }
+        },
+
+        deleteApplication: async (id: string) => {
+          set({ loading: true, error: null });
+          
+          try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            set(state => ({
+              applications: state.applications.filter(app => app.id !== id),
+              selectedApplication: state.selectedApplication?.id === id ? null : state.selectedApplication,
+              loading: false
+            }));
+          } catch (error) {
+            set({ 
+              loading: false, 
+              error: error instanceof Error ? error.message : 'Failed to delete application'
+            });
+          }
+        },
+
+        // Document management (mock implementations)
+        uploadDocument: async (data: UploadDocumentRequest) => {
+          // Mock implementation
+          console.log('Upload document:', data);
+        },
+
+        reviewDocument: async (documentId: string, data: ReviewDocumentRequest) => {
+          // Mock implementation
+          console.log('Review document:', documentId, data);
+        },
+
+        downloadDocument: async (documentId: string) => {
+          // Mock implementation
+          console.log('Download document:', documentId);
+        },
+
+        // Communication (mock implementations)
+        sendMessage: async (data: SendMessageRequest) => {
+          // Mock implementation
+          console.log('Send message:', data);
+        },
+
+        markMessageAsRead: async (messageId: string) => {
+          // Mock implementation
+          console.log('Mark message as read:', messageId);
+        },
+
+        // Stage management
+        moveToNextStage: async (applicationId: string) => {
+          const app = get().applications.find(a => a.id === applicationId);
+          if (!app) return;
+          
+          const stages = Object.values(ApplicationStage);
+          const currentIndex = stages.indexOf(app.stage);
+          const nextStage = stages[currentIndex + 1];
+          
+          if (nextStage) {
+            await get().updateApplication(applicationId, { stage: nextStage });
+          }
+        },
+
+        moveToPreviousStage: async (applicationId: string) => {
+          const app = get().applications.find(a => a.id === applicationId);
+          if (!app) return;
+          
+          const stages = Object.values(ApplicationStage);
+          const currentIndex = stages.indexOf(app.stage);
+          const previousStage = stages[currentIndex - 1];
+          
+          if (previousStage) {
+            await get().updateApplication(applicationId, { stage: previousStage });
+          }
+        },
+
+        updateStage: async (applicationId: string, stage: ApplicationStage) => {
+          await get().updateApplication(applicationId, { stage });
+        },
+
+        // UI actions
+        setSelectedApplication: (application: Application | null) => {
+          set({ selectedApplication: application });
+        },
+
+        setFilters: (filters: ApplicationFilters) => {
+          set({ filters });
+        },
+
+        setSearchQuery: (query: string) => {
+          set({ searchQuery: query });
+        },
+
+        clearError: () => {
+          set({ error: null });
+        },
+
+        // Real-time updates (mock implementations)
+        subscribeToUpdates: () => {
+          // Mock implementation - would typically setup WebSocket connection
+          console.log('Subscribed to real-time updates');
+        },
+
+        unsubscribeFromUpdates: () => {
+          // Mock implementation
+          console.log('Unsubscribed from real-time updates');
+        },
+
+        handleRealtimeUpdate: (update: any) => {
+          // Mock implementation
+          console.log('Received real-time update:', update);
+        }
+      }),
+      {
+        name: 'application-store',
+        partialize: (state) => ({
+          filters: state.filters,
+          searchQuery: state.searchQuery
+        })
+      }
+    ),
+    { name: 'application-store' }
+  )
+);
+
+export default useApplicationStore;

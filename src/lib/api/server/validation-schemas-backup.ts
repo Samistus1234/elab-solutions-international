@@ -1,0 +1,128 @@
+/**
+ * API Validation Schemas for ELAB Solutions International
+ * 
+ * Zod schemas for validating API requests
+ */
+
+import { z } from 'zod';
+
+// ============================================================================
+// COMMON SCHEMAS
+// ============================================================================
+
+export const PaginationSchema = z.object({
+  page: z.number().min(1).default(1),
+  limit: z.number().min(1).max(100).default(10)
+});
+
+export const IdParamSchema = z.object({
+  id: z.string().cuid()
+});
+
+// ============================================================================
+// AUTH SCHEMAS
+// ============================================================================
+
+export const LoginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  rememberMe: z.boolean().optional().default(false)
+});
+
+export const RegisterSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  phone: z.string().optional(),
+  country: z.string().min(1, 'Country is required'),
+  profession: z.string().min(1, 'Profession is required'),
+  consentGiven: z.boolean().refine(val => val === true, 'Consent is required')
+});
+
+export const RefreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required')
+});
+
+// ============================================================================
+// USER SCHEMAS
+// ============================================================================
+
+export const UpdateUserSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  phone: z.string().optional(),
+  country: z.string().optional(),
+  profession: z.string().optional(),
+  avatar: z.string().url().optional(),
+  dateOfBirth: z.string().datetime().optional(),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  preferences: z.record(z.any()).optional()
+});
+
+// ============================================================================
+// APPLICATION SCHEMAS
+// ============================================================================
+
+export const CreateApplicationSchema = z.object({
+  applicationType: z.string().min(1, 'Application type is required'),
+  targetCountry: z.string().min(1, 'Target country is required'),
+  urgency: z.enum(['standard', 'express', 'urgent']).default('standard'),
+  personalInfo: z.object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string(),
+    dateOfBirth: z.string().datetime(),
+    nationality: z.string(),
+    passportNumber: z.string().optional(),
+    address: z.object({
+      street: z.string(),
+      city: z.string(),
+      state: z.string(),
+      country: z.string(),
+      postalCode: z.string()
+    })
+  }),
+  education: z.array(z.object({
+    institution: z.string(),
+    degree: z.string(),
+    fieldOfStudy: z.string(),
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime(),
+    gpa: z.number().optional(),
+    country: z.string()
+  })),
+  workExperience: z.array(z.object({
+    employer: z.string(),
+    position: z.string(),
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime().optional(),
+    description: z.string(),
+    country: z.string(),
+    isCurrent: z.boolean().default(false)
+  }))
+});
+
+export const UpdateApplicationSchema = CreateApplicationSchema.partial();
+
+export const UserQuerySchema = z.object({
+  page: z.number().min(1).default(1),
+  limit: z.number().min(1).max(100).default(10),
+  search: z.string().optional(),
+  role: z.enum(['APPLICANT', 'CONSULTANT', 'ADMIN', 'PARTNER', 'INSTITUTION', 'SUPER_ADMIN']).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION']).optional(),
+  country: z.string().optional(),
+  profession: z.string().optional(),
+  sortBy: z.enum(['createdAt', 'lastName', 'email', 'lastLoginAt']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc')
+});
+
+export const UserRoleUpdateSchema = z.object({
+  role: z.enum(['APPLICANT', 'CONSULTANT', 'ADMIN', 'PARTNER', 'INSTITUTION', 'SUPER_ADMIN'])
+});
+
+export const UserStatusUpdateSchema = z.object({
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION']),
+  reason: z.string().optional()
+});
