@@ -29,7 +29,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     const { id } = params;
 
     // Check permissions - only ADMIN and SUPER_ADMIN can delete users
-    const canDeleteUser = requireRole(currentUser, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    const canDeleteUser = requireRole(currentUser, ['ADMIN', 'SUPER_ADMIN']);
     
     if (!canDeleteUser) {
       return errorResponse({

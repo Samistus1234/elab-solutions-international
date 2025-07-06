@@ -112,8 +112,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     // Check permissions
     const canViewApplication =
-      currentUser.role === UserRole.ADMIN ||
-      currentUser.role === UserRole.SUPER_ADMIN ||
+      currentUser.role === 'ADMIN' ||
+      currentUser.role === 'SUPER_ADMIN' ||
       application.userId === currentUser.id ||
       application.assignedTo === currentUser.id;
 
@@ -197,8 +197,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     // Check permissions
     const canUpdateApplication =
-      currentUser.role === UserRole.ADMIN ||
-      currentUser.role === UserRole.SUPER_ADMIN ||
+      currentUser.role === 'ADMIN' ||
+      currentUser.role === 'SUPER_ADMIN' ||
       existingApplication.userId === currentUser.id ||
       existingApplication.assignedTo === currentUser.id;
 
@@ -211,7 +211,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     // Applicants can only update their own applications if status is DRAFT
-    if (currentUser.role === UserRole.APPLICANT && existingApplication.status !== 'DRAFT') {
+    if (currentUser.role === 'APPLICANT' && existingApplication.status !== 'DRAFT') {
       return errorResponse({
         code: 'APPLICATION_NOT_EDITABLE',
         message: 'Application cannot be edited after submission',

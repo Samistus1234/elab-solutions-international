@@ -223,17 +223,17 @@ function checkStatusUpdatePermissions(
   const { userId, assignedTo } = application;
 
   // Super admin can do anything
-  if (role === UserRole.SUPER_ADMIN) {
+  if (role === 'SUPER_ADMIN') {
     return { allowed: true, message: '' };
   }
 
   // Admin can update most statuses
-  if (role === UserRole.ADMIN) {
+  if (role === 'ADMIN') {
     return { allowed: true, message: '' };
   }
 
   // Consultant can update if assigned to them
-  if (role === UserRole.CONSULTANT && assignedTo === currentUser.id) {
+  if (role === 'CONSULTANT' && assignedTo === currentUser.id) {
     // Consultants cannot cancel applications
     if (newStatus === 'CANCELLED') {
       return { 
