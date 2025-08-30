@@ -44,47 +44,8 @@ const createPrismaClient = () => {
   
   const prisma = new PrismaClient(config);
   
-  // Healthcare compliance middleware
-  prisma.$use(async (params, next) => {
-    const start = Date.now();
-    
-    try {
-      const result = await next(params);
-      
-      // Log successful operations for audit trail
-      if (process.env.VERBOSE_LOGGING === 'true') {
-        const duration = Date.now() - start;
-        console.log(`Database operation: ${params.model}.${params.action} completed in ${duration}ms`);
-      }
-      
-      return result;
-    } catch (error) {
-      // Log errors for compliance and monitoring
-      console.error('Database operation failed:', {
-        model: params.model,
-        action: params.action,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      });
-      
-      throw error;
-    }
-  });
-  
-  // GDPR compliance middleware for data access logging
-  prisma.$use(async (params, next) => {
-    // Log data access for sensitive models
-    const sensitiveModels = ['User', 'Document', 'Application', 'Payment'];
-    
-    if (sensitiveModels.includes(params.model || '')) {
-      // In production, this would integrate with your audit logging system
-      if (process.env.DEBUG_MODE === 'true') {
-        console.log(`GDPR Audit: Accessing ${params.model} with action ${params.action}`);
-      }
-    }
-    
-    return next(params);
-  });
+  // Note: Prisma middleware ($use) was deprecated in v5.0
+  // TODO: Migrate to Prisma Client Extensions for audit logging and compliance features
   
   return prisma;
 };

@@ -53,7 +53,8 @@ export function ChatInterface({
     getApplicationConversation,
     createApplicationConversation,
     currentTypingUsers,
-    getTotalUnreadCount
+    getTotalUnreadCount,
+    sendMessage
   } = useMessagingStore();
 
   const [showParticipantPanel, setShowParticipantPanel] = useState(showParticipants);
@@ -114,6 +115,12 @@ export function ChatInterface({
 
   const handleCloseChat = () => {
     setActiveConversation(null);
+  };
+
+  const handleSendMessage = async (messageData: any) => {
+    if (activeConversation) {
+      await sendMessage(activeConversation.id, messageData);
+    }
   };
 
   // ========================================================================
@@ -252,6 +259,7 @@ export function ChatInterface({
                   userRole={userRole}
                   allowFileUpload={allowFileUpload}
                   placeholder={`Message ${activeConversation.title}...`}
+                  onSendMessage={handleSendMessage}
                 />
               </div>
 

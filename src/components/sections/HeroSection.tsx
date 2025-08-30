@@ -3,11 +3,9 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Shield, Globe, Users } from 'lucide-react'
-import { useTranslations, useLocale } from 'next-intl'
 
 export function HeroSection() {
-  const t = useTranslations('hero')
-  const locale = useLocale()
+  const locale = 'en'
 
   return (
     <section className="relative bg-gradient-to-br from-primary-50 to-secondary-50 overflow-hidden">
@@ -21,29 +19,27 @@ export function HeroSection() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-              {t('title')}{' '}
-              <span className="gradient-text">{t('titleHighlight')}</span>{' '}
-              {t('titleEnd')}
+              Your Gateway to <span className="gradient-text">Global Healthcare</span> Opportunities
             </h1>
             
             <p className="text-xl text-gray-600 mb-8">
-              {t('subtitle')}
+              eLab Solutions International - Leading provider of healthcare credentialing, regulatory licensing, and placement services connecting professionals to opportunities in the Gulf region and beyond.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Link
-                href={`/${locale}/services`}
+                href="/services"
                 className="inline-flex items-center justify-center bg-primary-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary-700 transition-colors group"
               >
-                {t('cta.services')}
+                Explore Our Services
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               
               <Link
-                href={`/${locale}/centralops`}
+                href="/centralops"
                 className="inline-flex items-center justify-center bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold border-2 border-primary-600 hover:bg-primary-50 transition-colors"
               >
-                {t('cta.platform')}
+                Try CentralOps Platform
               </Link>
             </div>
             
@@ -52,7 +48,7 @@ export function HeroSection() {
                 <Shield className="h-8 w-8 text-primary-600" />
                 <div>
                   <p className="text-sm text-gray-600">ISO Certified</p>
-                  <p className="font-semibold">{t('stats.standards')}</p>
+                  <p className="font-semibold">ISO Certified Standards</p>
                 </div>
               </div>
               
@@ -60,7 +56,7 @@ export function HeroSection() {
                 <Globe className="h-8 w-8 text-primary-600" />
                 <div>
                   <p className="text-sm text-gray-600">Operating in</p>
-                  <p className="font-semibold">{t('stats.countries')}</p>
+                  <p className="font-semibold">15+ Countries</p>
                 </div>
               </div>
               
@@ -68,7 +64,7 @@ export function HeroSection() {
                 <Users className="h-8 w-8 text-primary-600" />
                 <div>
                   <p className="text-sm text-gray-600">Placed</p>
-                  <p className="font-semibold">{t('stats.professionals')}</p>
+                  <p className="font-semibold">10,000+ Professionals</p>
                 </div>
               </div>
             </div>
@@ -95,7 +91,7 @@ export function HeroSection() {
                     Join thousands of healthcare professionals who have advanced their careers with eLab Solutions
                   </p>
                   <Link
-                    href={`/${locale}/contact`}
+                    href="/contact"
                     className="text-primary-600 font-semibold hover:text-primary-700 inline-flex items-center"
                   >
                     Get Started

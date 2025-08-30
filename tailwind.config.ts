@@ -6,6 +6,21 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    // Ensure dynamic color classes are preserved
+    'bg-primary-600', 'bg-primary-700', 'bg-primary-100', 'text-primary-600', 'text-primary-100', 'border-primary-200',
+    'bg-secondary-600', 'bg-secondary-700', 'bg-secondary-100', 'text-secondary-600', 'text-secondary-100', 'border-secondary-200',
+    'bg-blue-600', 'bg-blue-700', 'bg-blue-100', 'text-blue-600', 'text-blue-100', 'border-blue-200',
+    'bg-green-600', 'bg-green-700', 'bg-green-100', 'text-green-600', 'text-green-100', 'border-green-200',
+    'bg-purple-600', 'bg-purple-700', 'bg-purple-100', 'text-purple-600', 'text-purple-100', 'border-purple-200',
+    'bg-indigo-600', 'bg-indigo-700', 'bg-indigo-100', 'text-indigo-600', 'text-indigo-100', 'border-indigo-200',
+    'bg-yellow-600', 'bg-yellow-700', 'bg-yellow-100', 'text-yellow-600', 'text-yellow-100', 'border-yellow-200',
+    'bg-red-600', 'bg-red-700', 'bg-red-100', 'text-red-600', 'text-red-100', 'border-red-200',
+    // Service grid classes
+    'service-card-primary', 'service-card-secondary', 'service-card-blue', 'service-card-green', 'service-card-purple', 'service-card-indigo',
+    'service-btn-primary', 'service-btn-secondary', 'service-btn-blue', 'service-btn-green', 'service-btn-purple', 'service-btn-indigo',
+    'benefit-dot-primary', 'benefit-dot-secondary', 'benefit-dot-blue', 'benefit-dot-green', 'benefit-dot-purple', 'benefit-dot-indigo',
+  ],
   theme: {
     extend: {
       colors: {

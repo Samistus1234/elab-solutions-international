@@ -4,13 +4,25 @@
 'use client';
 
 import { useState } from 'react';
+import { UserRole } from '@/types/business';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  conversationId?: string;
+  userRole?: UserRole;
+  allowFileUpload?: boolean;
+  placeholder?: string;
 }
 
-export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
+export function MessageInput({ 
+  onSendMessage, 
+  disabled, 
+  conversationId, 
+  userRole, 
+  allowFileUpload, 
+  placeholder = "Type a message..."
+}: MessageInputProps) {
   const [message, setMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,7 +40,7 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder={placeholder}
           disabled={disabled}
           className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
         />

@@ -91,8 +91,85 @@
   .btn-secondary {
     @apply bg-secondary-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-secondary-700 transition-colors duration-200;
   }
+
+  /* Service Grid Color Variants - Pre-defined classes */
+  .service-card-primary {
+    @apply bg-primary-600 text-primary-100 border-primary-200;
+  }
   
-  /* RTL Support */
+  .service-card-secondary {
+    @apply bg-secondary-600 text-secondary-100 border-secondary-200;
+  }
+  
+  .service-card-blue {
+    @apply bg-blue-600 text-blue-100 border-blue-200;
+  }
+  
+  .service-card-green {
+    @apply bg-green-600 text-green-100 border-green-200;
+  }
+  
+  .service-card-purple {
+    @apply bg-purple-600 text-purple-100 border-purple-200;
+  }
+  
+  .service-card-indigo {
+    @apply bg-indigo-600 text-indigo-100 border-indigo-200;
+  }
+
+  /* Button variants for services */
+  .service-btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white;
+  }
+  
+  .service-btn-secondary {
+    @apply bg-secondary-600 hover:bg-secondary-700 text-white;
+  }
+  
+  .service-btn-blue {
+    @apply bg-blue-600 hover:bg-blue-700 text-white;
+  }
+  
+  .service-btn-green {
+    @apply bg-green-600 hover:bg-green-700 text-white;
+  }
+  
+  .service-btn-purple {
+    @apply bg-purple-600 hover:bg-purple-700 text-white;
+  }
+  
+  .service-btn-indigo {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+  }
+
+  /* Benefit dots */
+  .benefit-dot-primary {
+    @apply bg-primary-600;
+  }
+  
+  .benefit-dot-secondary {
+    @apply bg-secondary-600;
+  }
+  
+  .benefit-dot-blue {
+    @apply bg-blue-600;
+  }
+  
+  .benefit-dot-green {
+    @apply bg-green-600;
+  }
+  
+  .benefit-dot-purple {
+    @apply bg-purple-600;
+  }
+  
+  .benefit-dot-indigo {
+    @apply bg-indigo-600;
+  }
+}
+
+/* RTL Support */
+@layer utilities {
   [dir="rtl"] .rtl\:mr-2 {
     margin-right: 0.5rem;
     margin-left: 0;
@@ -129,5 +206,52 @@
   
   [dir="rtl"] .rtl\:text-left {
     text-align: left;
+  }
+  
+  /* Fallback styles for critical components */
+  .fallback-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .fallback-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .fallback-btn:hover {
+    background-color: #1d4ed8;
+  }
+  
+  .fallback-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .fallback-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 768px) {
+    .fallback-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .fallback-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 }

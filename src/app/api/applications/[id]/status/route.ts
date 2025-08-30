@@ -101,7 +101,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     // Validate status transition
     const currentStatus = existingApplication.status;
-    const allowedTransitions = STATUS_TRANSITIONS[currentStatus as keyof typeof STATUS_TRANSITIONS] || [];
+    const allowedTransitions: any[] = (STATUS_TRANSITIONS as any)[currentStatus] || [];
     
     if (!allowedTransitions.includes(newStatus)) {
       return errorResponse({
@@ -175,14 +175,14 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         action: 'UPDATE_APPLICATION_STATUS',
         resource: 'APPLICATION',
         resourceId: id,
-        oldValues: {
+        oldValues: JSON.stringify({
           status: currentStatus
-        },
-        newValues: {
+        }),
+        newValues: JSON.stringify({
           status: newStatus,
           reason,
           notes
-        },
+        }),
         reason,
         ipAddress: req.headers.get('x-forwarded-for') || 
                   req.headers.get('x-real-ip') || 

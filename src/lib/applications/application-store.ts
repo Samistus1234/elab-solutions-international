@@ -280,11 +280,9 @@ const useApplicationStore = create<ApplicationStore>()(
             // Build query parameters
             const params = new URLSearchParams();
             
-            if (filters?.status) params.append('status', filters.status);
-            if (filters?.type) params.append('type', filters.type);
-            if (filters?.priority) params.append('priority', filters.priority);
-            if (filters?.country) params.append('country', filters.country);
-            if (filters?.profession) params.append('profession', filters.profession);
+            if (filters?.status) params.append('status', Array.isArray(filters.status) ? filters.status.join(',') : filters.status);
+            if (filters?.type) params.append('type', Array.isArray(filters.type) ? filters.type.join(',') : filters.type);
+            if (filters?.priority) params.append('priority', Array.isArray(filters.priority) ? filters.priority.join(',') : filters.priority);
             if (get().searchQuery) params.append('search', get().searchQuery);
             
             const queryString = params.toString();

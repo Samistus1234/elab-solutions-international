@@ -10,6 +10,10 @@ import type {
   LoginCredentials,
   RegisterData,
   TokenPair,
+  EmailVerificationData,
+  PhoneVerificationData,
+  TwoFactorVerificationData,
+  TwoFactorSetupData,
 } from '@/types/auth';
 import type { User } from '@/types/business';
 import { UserRole, UserStatus } from '@/types/business';
@@ -49,11 +53,11 @@ export class RealAuthClient {
       const result = await response.json();
 
       if (!response.ok) {
-        return toResult(null, new Error(result.error?.message || 'Login failed'));
+        return { success: false, error: new Error(result.error?.message || 'Login failed') };
       }
 
       if (!result.success) {
-        return toResult(null, new Error(result.error?.message || 'Login failed'));
+        return { success: false, error: new Error(result.error?.message || 'Login failed') };
       }
 
       // Transform API response to AuthSession format
@@ -87,28 +91,35 @@ export class RealAuthClient {
           },
           createdAt: result.data.user.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          lastLoginAt: new Date().toISOString(),
-          lastActivityAt: new Date().toISOString()
+          lastLoginAt: new Date().toISOString()
         },
         accessToken: result.data.tokens.accessToken,
         refreshToken: result.data.tokens.refreshToken,
         expiresAt: new Date(Date.now() + (result.data.tokens.expiresIn * 1000)).toISOString(),
         sessionId: result.data.session.id,
         issuedAt: new Date().toISOString(),
-        lastRefreshAt: new Date().toISOString()
+        deviceInfo: {
+          userAgent: 'Unknown',
+          ipAddress: 'Unknown',
+          deviceType: 'desktop' as const,
+          browser: 'Unknown',
+          os: 'Unknown'
+        }
       };
 
       // Store tokens securely
       this.storeTokens({
         accessToken: authSession.accessToken,
-        refreshToken: authSession.refreshToken
+        refreshToken: authSession.refreshToken,
+        expiresIn: result.data.tokens.expiresIn || 3600,
+        tokenType: 'Bearer' as const
       });
 
-      return toResult(authSession, null);
+      return { success: true, data: authSession };
 
     } catch (error) {
       console.error('Login error:', error);
-      return toResult(null, error instanceof Error ? error : new Error('Login failed'));
+      return { success: false, error: error instanceof Error ? error : new Error('Login failed') };
     }
   }
 
@@ -131,11 +142,11 @@ export class RealAuthClient {
       const result = await response.json();
 
       if (!response.ok) {
-        return toResult(null, new Error(result.error?.message || 'Registration failed'));
+        return { success: false, error: new Error(result.error?.message || 'Registration failed') };
       }
 
       if (!result.success) {
-        return toResult(null, new Error(result.error?.message || 'Registration failed'));
+        return { success: false, error: new Error(result.error?.message || 'Registration failed') };
       }
 
       // Transform API response to AuthSession format
@@ -169,28 +180,35 @@ export class RealAuthClient {
           },
           createdAt: result.data.user.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          lastLoginAt: new Date().toISOString(),
-          lastActivityAt: new Date().toISOString()
+          lastLoginAt: new Date().toISOString()
         },
         accessToken: result.data.tokens.accessToken,
         refreshToken: result.data.tokens.refreshToken,
         expiresAt: new Date(Date.now() + (result.data.tokens.expiresIn * 1000)).toISOString(),
         sessionId: result.data.session.id,
         issuedAt: new Date().toISOString(),
-        lastRefreshAt: new Date().toISOString()
+        deviceInfo: {
+          userAgent: 'Unknown',
+          ipAddress: 'Unknown',
+          deviceType: 'desktop' as const,
+          browser: 'Unknown',
+          os: 'Unknown'
+        }
       };
 
       // Store tokens securely
       this.storeTokens({
         accessToken: authSession.accessToken,
-        refreshToken: authSession.refreshToken
+        refreshToken: authSession.refreshToken,
+        expiresIn: result.data.tokens.expiresIn || 3600,
+        tokenType: 'Bearer' as const
       });
 
-      return toResult(authSession, null);
+      return { success: true, data: authSession };
 
     } catch (error) {
       console.error('Registration error:', error);
-      return toResult(null, error instanceof Error ? error : new Error('Registration failed'));
+      return { success: false, error: error instanceof Error ? error : new Error('Registration failed') };
     }
   }
 
@@ -214,14 +232,59 @@ export class RealAuthClient {
       // Clear stored tokens
       this.clearTokens();
       
-      return toResult(undefined, null);
+      return { success: true, data: undefined };
 
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear tokens even if API call fails
       this.clearTokens();
-      return toResult(undefined, null);
+      return { success: true, data: undefined };
     }
+  }
+
+  /**
+   * Verify email address
+   */
+  async verifyEmail(data: EmailVerificationData): Promise<Result<void, Error>> {
+    // TODO: Implement verifyEmail functionality in RealAuthClient
+    console.warn('verifyEmail not yet implemented for RealAuthClient');
+    return { success: false, error: new Error('Email verification feature not yet available') };
+  }
+
+  /**
+   * Verify phone number
+   */
+  async verifyPhone(data: PhoneVerificationData): Promise<Result<void, Error>> {
+    // TODO: Implement verifyPhone functionality in RealAuthClient
+    console.warn('verifyPhone not yet implemented for RealAuthClient');
+    return { success: false, error: new Error('Phone verification feature not yet available') };
+  }
+
+  /**
+   * Enable two-factor authentication
+   */
+  async enableTwoFactor(): Promise<Result<TwoFactorSetupData, Error>> {
+    // TODO: Implement enableTwoFactor functionality in RealAuthClient
+    console.warn('enableTwoFactor not yet implemented for RealAuthClient');
+    return { success: false, error: new Error('Two-factor authentication feature not yet available') };
+  }
+
+  /**
+   * Verify two-factor authentication code
+   */
+  async verifyTwoFactor(data: TwoFactorVerificationData): Promise<Result<void, Error>> {
+    // TODO: Implement verifyTwoFactor functionality in RealAuthClient
+    console.warn('verifyTwoFactor not yet implemented for RealAuthClient');
+    return { success: false, error: new Error('Two-factor verification feature not yet available') };
+  }
+
+  /**
+   * Disable two-factor authentication
+   */
+  async disableTwoFactor(password: string): Promise<Result<void, Error>> {
+    // TODO: Implement disableTwoFactor functionality in RealAuthClient
+    console.warn('disableTwoFactor not yet implemented for RealAuthClient');
+    return { success: false, error: new Error('Two-factor disable feature not yet available') };
   }
 
   // ============================================================================

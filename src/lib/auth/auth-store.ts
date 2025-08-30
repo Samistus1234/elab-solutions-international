@@ -106,13 +106,7 @@ const useAuthStore = create<AuthStore>()(
                 error: null
               });
 
-              // If email verification is not required, automatically log in
-              if (!result.data.requiresVerification) {
-                await get().login({
-                  email: data.email,
-                  password: data.password
-                });
-              }
+              // Registration successful, user can now proceed to login
             } else {
               set({
                 loading: false,
@@ -158,109 +152,35 @@ const useAuthStore = create<AuthStore>()(
          * Refresh authentication token
          */
         refreshToken: async () => {
-          try {
-            const result = await authClient.refreshToken();
-
-            if (isSuccess(result)) {
-              const session = await authClient.getCurrentSession();
-              if (session) {
-                set({
-                  session,
-                  lastActivity: new Date().toISOString()
-                });
-              }
-            } else {
-              // Token refresh failed, logout user
-              await get().logout();
-            }
-          } catch (error) {
-            console.warn('Token refresh error:', error);
-            await get().logout();
-          }
+          // TODO: Implement refresh token functionality in RealAuthClient
+          console.warn('Token refresh not yet implemented for RealAuthClient');
         },
 
         /**
          * Request password reset
          */
         forgotPassword: async (email: string) => {
-          set({ loading: true, error: null });
-
-          try {
-            const result = await authClient.forgotPassword({ email });
-
-            if (isError(result)) {
-              set({
-                loading: false,
-                error: result.success ? null : result.error.message
-              });
-            } else {
-              set({
-                loading: false,
-                error: null
-              });
-            }
-          } catch (error) {
-            set({
-              loading: false,
-              error: error instanceof Error ? error.message : 'Password reset request failed'
-            });
-          }
+          // TODO: Implement forgot password functionality in RealAuthClient
+          console.warn('Forgot password not yet implemented for RealAuthClient');
+          set({ loading: false, error: 'Forgot password feature not yet available' });
         },
 
         /**
          * Reset password with token
          */
         resetPassword: async (data: PasswordResetData) => {
-          set({ loading: true, error: null });
-
-          try {
-            const result = await authClient.resetPassword(data);
-
-            if (isError(result)) {
-              set({
-                loading: false,
-                error: result.success ? null : result.error.message
-              });
-            } else {
-              set({
-                loading: false,
-                error: null
-              });
-            }
-          } catch (error) {
-            set({
-              loading: false,
-              error: error instanceof Error ? error.message : 'Password reset failed'
-            });
-          }
+          // TODO: Implement reset password functionality in RealAuthClient
+          console.warn('Reset password not yet implemented for RealAuthClient');
+          set({ loading: false, error: 'Reset password feature not yet available' });
         },
 
         /**
          * Change user password
          */
         changePassword: async (data: ChangePasswordData) => {
-          set({ loading: true, error: null });
-
-          try {
-            const result = await authClient.changePassword(data);
-
-            if (isError(result)) {
-              set({
-                loading: false,
-                error: result.success ? null : result.error.message
-              });
-            } else {
-              set({
-                loading: false,
-                error: null
-              });
-            }
-          } catch (error) {
-            set({
-              loading: false,
-              error: error instanceof Error ? error.message : 'Password change failed'
-            });
-          }
+          // TODO: Implement change password functionality in RealAuthClient
+          console.warn('Change password not yet implemented for RealAuthClient');
+          set({ loading: false, error: 'Change password feature not yet available' });
         },
 
         /**
@@ -402,12 +322,19 @@ const useAuthStore = create<AuthStore>()(
           set({ loading: true, error: null });
 
           try {
-            // Implementation would call authClient.disableTwoFactor(password)
-            // For now, just simulate the call
-            set({
-              loading: false,
-              error: null
-            });
+            const result = await authClient.disableTwoFactor(password);
+
+            if (isError(result)) {
+              set({
+                loading: false,
+                error: result.success ? null : result.error.message
+              });
+            } else {
+              set({
+                loading: false,
+                error: null
+              });
+            }
           } catch (error) {
             set({
               loading: false,
@@ -533,48 +460,11 @@ const useAuthStore = create<AuthStore>()(
           }
         },
 
-
-        /**
-         * Clear authentication error
-         */
-        clearError: () => {
-          set({ error: null });
-        },
-
         /**
          * Update last activity timestamp
          */
         updateActivity: () => {
           set({ lastActivity: new Date().toISOString() });
-        },
-
-        /**
-         * Check if user has specific permission
-         */
-        checkPermission: (permission: Permission): boolean => {
-          const { session } = get();
-          
-          if (!session) {
-            return false;
-          }
-
-          // Decode JWT to get permissions
-          try {
-            const payload = JSON.parse(atob(session.accessToken.split('.')[1]));
-            const permissions: Permission[] = payload.permissions || [];
-            
-            return permissions.includes(permission);
-          } catch {
-            return false;
-          }
-        },
-
-        /**
-         * Check if user has specific role
-         */
-        hasRole: (role: UserRole): boolean => {
-          const { user } = get();
-          return user?.role === role;
         },
 
         /**

@@ -14,7 +14,7 @@ import {
   handleApiError,
   authenticateRequest
 } from '@/lib/api/server/api-utils';
-import { UserRole } from '@/generated/prisma';
+import { $Enums } from '@/generated/prisma';
 import { UpdateApplicationSchema } from '@/lib/api/server/validation-schemas';
 
 interface RouteParams {
@@ -110,10 +110,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // Check permissions
+    // Check permissions - using type assertion for role comparison
     const canViewApplication =
-      currentUser.role === 'ADMIN' ||
-      currentUser.role === 'SUPER_ADMIN' ||
+      (currentUser.role as string) === 'ADMIN' ||
+      (currentUser.role as string) === 'SUPER_ADMIN' ||
       application.userId === currentUser.id ||
       application.assignedTo === currentUser.id;
 
@@ -159,14 +159,14 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const updateData = bodyResult.data;
 
     // Process JSON fields to stringify them
-    const processedUpdateData = { ...updateData };
-    if (processedUpdateData.personalInfo) {
+    const processedUpdateData: any = { ...updateData };
+    if (processedUpdateData.personalInfo && typeof processedUpdateData.personalInfo === 'object') {
       processedUpdateData.personalInfo = JSON.stringify(processedUpdateData.personalInfo);
     }
-    if (processedUpdateData.additionalData) {
+    if (processedUpdateData.additionalData && typeof processedUpdateData.additionalData === 'object') {
       processedUpdateData.additionalData = JSON.stringify(processedUpdateData.additionalData);
     }
-    if (processedUpdateData.workflowState) {
+    if (processedUpdateData.workflowState && typeof processedUpdateData.workflowState === 'object') {
       processedUpdateData.workflowState = JSON.stringify(processedUpdateData.workflowState);
     }
 
@@ -195,10 +195,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // Check permissions
+    // Check permissions - using type assertion for role comparison
     const canUpdateApplication =
-      currentUser.role === 'ADMIN' ||
-      currentUser.role === 'SUPER_ADMIN' ||
+      (currentUser.role as string) === 'ADMIN' ||
+      (currentUser.role as string) === 'SUPER_ADMIN' ||
       existingApplication.userId === currentUser.id ||
       existingApplication.assignedTo === currentUser.id;
 
@@ -211,7 +211,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     // Applicants can only update their own applications if status is DRAFT
-    if (currentUser.role === 'APPLICANT' && existingApplication.status !== 'DRAFT') {
+    if ((currentUser.role as string) === 'APPLICANT' && existingApplication.status !== 'DRAFT') {
       return errorResponse({
         code: 'APPLICATION_NOT_EDITABLE',
         message: 'Application cannot be edited after submission',
@@ -310,7 +310,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     const { id } = params;
 
     // Check permissions - only ADMIN and SUPER_ADMIN can delete applications
-    if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPER_ADMIN') {
+    if ((currentUser.role as string) !== 'ADMIN' && (currentUser.role as string) !== 'SUPER_ADMIN') {
       return errorResponse({
         code: 'FORBIDDEN',
         message: 'Insufficient permissions to delete applications',
@@ -363,13 +363,13 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         action: 'DELETE_APPLICATION',
         resource: 'APPLICATION',
         resourceId: id,
-        oldValues: {
+        oldValues: JSON.stringify({
           status: existingApplication.status
-        },
-        newValues: {
+        }),
+        newValues: JSON.stringify({
           status: 'CANCELLED',
           deletedBy: currentUser.id
-        },
+        }),
         ipAddress: req.headers.get('x-forwarded-for') || 
                   req.headers.get('x-real-ip') || 
                   'Unknown',

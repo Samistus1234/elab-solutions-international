@@ -5,7 +5,7 @@
  * Seeds the database with initial data for development and testing
  */
 
-import { PrismaClient } from '../src/generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -124,7 +124,7 @@ async function main() {
     },
   ];
 
-  const createdApplicants = [];
+  const createdApplicants: any[] = [];
 
   for (const applicant of testApplicants) {
     const user = await prisma.user.upsert({

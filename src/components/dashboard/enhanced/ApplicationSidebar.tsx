@@ -207,7 +207,7 @@ export function ApplicationSidebar({ userRole, onClose }: ApplicationSidebarProp
         </h3>
         <nav className="space-y-1">
           {items.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
             return (
               <Link
                 key={item.name}

@@ -400,8 +400,10 @@ export interface AuthActions {
   readonly updateProfile: (data: Partial<User['profile']>) => Promise<void>;
   readonly checkPermission: (permission: Permission, resourceId?: ID) => boolean;
   readonly hasRole: (role: UserRole) => boolean;
+  readonly hasAnyRole: (roles: UserRole[]) => boolean;
   readonly initialize: () => Promise<void>;
-  readonly updateActivity: () => void;  readonly clearError: () => void;
+  readonly updateActivity: () => void;
+  readonly clearError: () => void;
 }
 
 export type AuthStore = AuthState & AuthActions;

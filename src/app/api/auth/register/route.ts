@@ -128,13 +128,13 @@ export async function POST(req: NextRequest) {
         action: 'REGISTER',
         resource: 'USER',
         resourceId: user.id,
-        newValues: {
+        newValues: JSON.stringify({
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
           status: user.status
-        },
+        }),
         ipAddress: req.headers.get('x-forwarded-for') || 
                   req.headers.get('x-real-ip') || 
                   'Unknown',

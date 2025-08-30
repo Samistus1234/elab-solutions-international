@@ -8,7 +8,7 @@ import {
   authenticateRequest,
   requireRole
 } from '@/lib/api/server/api-utils';
-import { UserRole } from '@/generated/prisma';
+import { $Enums } from '@/generated/prisma';
 
 interface RouteParams {
   params: { id: string };
@@ -29,7 +29,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     const { id } = params;
 
     // Check permissions - only ADMIN and SUPER_ADMIN can delete users
-    const canDeleteUser = requireRole(currentUser, ['ADMIN', 'SUPER_ADMIN']);
+    const canDeleteUser = (currentUser.role as string) === 'ADMIN' || (currentUser.role as string) === 'SUPER_ADMIN';
     
     if (!canDeleteUser) {
       return errorResponse({
