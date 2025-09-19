@@ -448,7 +448,7 @@ function SignupContent() {
                         <div className="font-medium text-gray-900">{tier.name}</div>
                         <div className="text-sm text-gray-500">{tier.price}</div>
                       </div>
-                      {tier.popular && (
+                      {'popular' in tier && tier.popular && (
                         <Star className="h-5 w-5 text-yellow-500 fill-current" />
                       )}
                     </div>

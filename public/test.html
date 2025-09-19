@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 50px; 
+            background: #f0f0f0;
+        }
+        .test-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .success { 
+            color: #28a745; 
+            font-size: 24px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1 class="success">✅ Server is Working!</h1>
+        <p>This confirms the Next.js server is running properly.</p>
+        <p><strong>Time:</strong> <span id="time"></span></p>
+        <p><strong>URL:</strong> /test.html</p>
+        <p><strong>Port:</strong> 3001</p>
+    </div>
+    
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

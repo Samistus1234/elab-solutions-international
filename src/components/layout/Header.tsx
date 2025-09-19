@@ -37,7 +37,17 @@ export function Header() {
         { name: 'Consultation Services', href: '/services/consultation' },
       ],
     },
-    { name: 'CentralOps', href: '/centralops' },
+    { 
+      name: 'CentralOps', 
+      href: '/centralops',
+      dropdown: [
+        { name: 'Partner Platform', href: '/centralops' },
+        { name: 'Operations Hub', href: '/centralops/operations' },
+        { name: 'Partner Dashboard', href: '/centralops/partners' },
+        { name: 'Client Management', href: '/centralops/clients' },
+        { name: 'Financial Center', href: '/centralops/finance' },
+      ],
+    },
     { 
       name: 'ELAB Academy', 
       href: '/academy',
