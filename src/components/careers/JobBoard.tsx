@@ -1,296 +1,347 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import Link from 'next/link'
-import { MapPin, Building, Clock, DollarSign, ChevronRight, Filter, Heart } from 'lucide-react'
+import {
+  Building2,
+  Clock,
+  ChevronRight,
+  Heart,
+  Sparkles,
+  SlidersHorizontal,
+  MapPin,
+} from 'lucide-react'
 
 const jobListings = [
   {
     id: 1,
-    title: 'Senior Registered Nurse - ICU',
+    title: 'Senior Registered Nurse — ICU',
     company: 'Dubai Medical Center',
+    companyAbbr: 'DMC',
     location: 'Dubai, UAE',
+    flag: '🇦🇪',
     type: 'Full-time',
-    experience: '5+ years',
-    salary: '$80,000 - $95,000',
-    posted: '2 days ago',
+    experience: '5+ yrs',
+    salary: '$80K – $95K',
+    posted: '2d ago',
     featured: true,
-    description: 'Leading hospital in Dubai seeks experienced ICU nurse with DHA license or eligibility.',
-    requirements: ['BSN required', 'ICU experience', 'BLS/ACLS certified'],
+    aiMatch: 94,
+    description:
+      'Leading hospital in Dubai seeks experienced ICU nurse with DHA license or eligibility. Housing allowance, annual flights, and exceptional benefits included.',
+    tags: ['BSN Required', 'ICU Experience', 'BLS/ACLS Certified'],
+    specialty: 'Nursing',
   },
   {
     id: 2,
     title: 'Clinical Laboratory Scientist',
     company: 'King Faisal Specialist Hospital',
+    companyAbbr: 'KFS',
     location: 'Riyadh, Saudi Arabia',
+    flag: '🇸🇦',
     type: 'Full-time',
-    experience: '3+ years',
-    salary: '$70,000 - $85,000',
-    posted: '3 days ago',
+    experience: '3+ yrs',
+    salary: '$70K – $85K',
+    posted: '3d ago',
     featured: true,
-    description: 'Join our world-class laboratory team. SCFHS license support provided.',
-    requirements: ['Bachelor in Lab Science', 'ASCP certified preferred', 'Molecular diagnostics experience'],
+    aiMatch: 88,
+    description:
+      'Join our world-class laboratory team. SCFHS license support provided. Work alongside leading researchers in a state-of-the-art facility.',
+    tags: ['BSc Lab Science', 'ASCP Preferred', 'Molecular Diagnostics'],
+    specialty: 'Laboratory',
   },
   {
     id: 3,
-    title: 'Pharmacist - Oncology',
+    title: 'Oncology Pharmacist',
     company: 'Hamad Medical Corporation',
+    companyAbbr: 'HMC',
     location: 'Doha, Qatar',
+    flag: '🇶🇦',
     type: 'Full-time',
-    experience: '4+ years',
-    salary: '$75,000 - $90,000',
-    posted: '5 days ago',
+    experience: '4+ yrs',
+    salary: '$75K – $90K',
+    posted: '5d ago',
     featured: false,
-    description: 'Oncology pharmacist needed for leading cancer center. QCHP registration required.',
-    requirements: ['PharmD or equivalent', 'Oncology experience', 'Arabic language advantage'],
+    aiMatch: 79,
+    description:
+      'Oncology pharmacist needed for leading cancer centre. QCHP registration required. Tax-free salary with excellent perks and career development.',
+    tags: ['PharmD', 'Oncology Experience', 'QCHP Registration'],
+    specialty: 'Pharmacy',
   },
   {
     id: 4,
     title: 'Radiologic Technologist',
     company: 'Cleveland Clinic Abu Dhabi',
+    companyAbbr: 'CCA',
     location: 'Abu Dhabi, UAE',
+    flag: '🇦🇪',
     type: 'Full-time',
-    experience: '2+ years',
-    salary: '$60,000 - $75,000',
-    posted: '1 week ago',
+    experience: '2+ yrs',
+    salary: '$60K – $75K',
+    posted: '1w ago',
     featured: false,
-    description: 'Join our radiology department. HAAD license or eligibility required.',
-    requirements: ['ARRT certified', 'MRI/CT experience', 'Patient care skills'],
+    aiMatch: 72,
+    description:
+      'Join our radiology department at a world-ranked institution. HAAD license or eligibility required. MRI/CT experience preferred.',
+    tags: ['ARRT Certified', 'MRI/CT Experience', 'HAAD Eligible'],
+    specialty: 'Radiology',
   },
   {
     id: 5,
-    title: 'NICU Nurse',
+    title: 'NICU Specialist Nurse',
     company: 'Mediclinic Middle East',
+    companyAbbr: 'MME',
     location: 'Dubai, UAE',
+    flag: '🇦🇪',
     type: 'Full-time',
-    experience: '3+ years',
-    salary: '$70,000 - $85,000',
-    posted: '1 week ago',
+    experience: '3+ yrs',
+    salary: '$70K – $85K',
+    posted: '1w ago',
     featured: true,
-    description: 'Specialized NICU nurse for level III nursery. Excellent benefits package.',
-    requirements: ['NICU experience mandatory', 'NRP certified', 'DHA license or eligible'],
+    aiMatch: 91,
+    description:
+      'Specialized NICU nurse for level III nursery. NRP certification required. Excellent benefits package with family accommodation.',
+    tags: ['NICU Experience', 'NRP Certified', 'DHA Eligible'],
+    specialty: 'Nursing',
   },
 ]
 
-const filters = {
-  specialties: ['Nursing', 'Laboratory', 'Pharmacy', 'Radiology', 'Allied Health'],
-  locations: ['UAE', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman'],
-  experience: ['Entry Level', '1-3 years', '3-5 years', '5+ years'],
-  jobType: ['Full-time', 'Part-time', 'Contract', 'Locum'],
+const FILTER_OPTIONS: Record<string, string[]> = {
+  Specialty: ['All', 'Nursing', 'Laboratory', 'Pharmacy', 'Radiology', 'Allied Health'],
+  Location: ['All', 'UAE', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman'],
+  Experience: ['All', 'Entry Level', '1–3 years', '3–5 years', '5+ years'],
+  Type: ['All', 'Full-time', 'Part-time', 'Contract', 'Locum'],
 }
 
 export function JobBoard() {
-  const [selectedFilters, setSelectedFilters] = useState({
-    specialty: '',
-    location: '',
-    experience: '',
-    jobType: '',
+  const [filters, setFilters] = useState<Record<string, string>>({
+    Specialty: 'All',
+    Location: 'All',
+    Experience: 'All',
+    Type: 'All',
   })
-  const [savedJobs, setSavedJobs] = useState<number[]>([])
+  const [saved, setSaved] = useState<number[]>([])
+  const [aiRanked, setAiRanked] = useState(false)
 
-  const toggleSaveJob = (jobId: number) => {
-    setSavedJobs(prev => 
-      prev.includes(jobId) 
-        ? prev.filter(id => id !== jobId)
-        : [...prev, jobId]
+  const displayJobs = aiRanked
+    ? [...jobListings].sort((a, b) => b.aiMatch - a.aiMatch)
+    : jobListings
+
+  const toggleSave = (id: number) =>
+    setSaved((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
-  }
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section id="job-board" className="py-20 bg-[#050e1a]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="mb-8"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest Job Opportunities</h2>
-          <p className="text-gray-600">Find your perfect match from our verified job listings</p>
-        </motion.div>
+
+        {/* Section header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          <div>
+            <p className="text-teal-400 text-xs font-mono uppercase tracking-[0.2em] mb-2">
+              Smart Job Board
+            </p>
+            <h2 className="text-3xl md:text-4xl font-black text-white">
+              Latest Opportunities
+            </h2>
+            <p className="text-slate-500 text-sm mt-1.5">
+              {displayJobs.length} verified positions available
+            </p>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setAiRanked(!aiRanked)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 ${
+              aiRanked
+                ? 'bg-teal-500/20 border-teal-500/40 text-teal-300 shadow-lg shadow-teal-500/10'
+                : 'bg-white/4 border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400'
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            AI Ranked
+          </motion.button>
+        </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-20">
-              <div className="flex items-center mb-6">
-                <Filter className="h-5 w-5 mr-2 text-gray-600" />
-                <h3 className="font-semibold text-gray-900">Filter Jobs</h3>
-              </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Specialty
-                  </label>
-                  <select
-                    value={selectedFilters.specialty}
-                    onChange={(e) => setSelectedFilters({...selectedFilters, specialty: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="">All Specialties</option>
-                    {filters.specialties.map(specialty => (
-                      <option key={specialty} value={specialty}>{specialty}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <select
-                    value={selectedFilters.location}
-                    onChange={(e) => setSelectedFilters({...selectedFilters, location: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="">All Locations</option>
-                    {filters.locations.map(location => (
-                      <option key={location} value={location}>{location}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Experience Level
-                  </label>
-                  <select
-                    value={selectedFilters.experience}
-                    onChange={(e) => setSelectedFilters({...selectedFilters, experience: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="">All Levels</option>
-                    {filters.experience.map(exp => (
-                      <option key={exp} value={exp}>{exp}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Job Type
-                  </label>
-                  <select
-                    value={selectedFilters.jobType}
-                    onChange={(e) => setSelectedFilters({...selectedFilters, jobType: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="">All Types</option>
-                    {filters.jobType.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <button
-                  onClick={() => setSelectedFilters({ specialty: '', location: '', experience: '', jobType: '' })}
-                  className="w-full text-teal-600 hover:text-teal-700 font-medium"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            </div>
-          </motion.div>
 
-          <div className="lg:col-span-3 space-y-6">
-            {jobListings.map((job, index) => (
-              <motion.div
-                key={job.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className={`bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 ${
-                  job.featured ? 'border-2 border-teal-500' : ''
-                }`}
+          {/* Filter sidebar */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="bg-white/3 border border-white/8 rounded-2xl p-6 sticky top-24">
+              <div className="flex items-center gap-2 mb-7">
+                <SlidersHorizontal className="h-4 w-4 text-teal-400" />
+                <span className="text-white font-bold text-sm">Filter Jobs</span>
+              </div>
+
+              {Object.entries(FILTER_OPTIONS).map(([key, options]) => (
+                <div key={key} className="mb-6 last:mb-0">
+                  <label className="block text-xs text-slate-500 uppercase tracking-[0.15em] font-medium mb-2.5">
+                    {key}
+                  </label>
+                  <div className="space-y-1">
+                    {options.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => setFilters({ ...filters, [key]: opt })}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+                          filters[key] === opt
+                            ? 'bg-teal-500/15 text-teal-300 border border-teal-500/25'
+                            : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={() =>
+                  setFilters({ Specialty: 'All', Location: 'All', Experience: 'All', Type: 'All' })
+                }
+                className="w-full text-slate-600 hover:text-teal-400 text-xs mt-4 transition-colors font-medium"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    {job.featured && (
-                      <span className="inline-block bg-teal-100 text-teal-800 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+                Reset all filters
+              </button>
+            </div>
+          </div>
+
+          {/* Job list */}
+          <div className="lg:col-span-3 space-y-4">
+            <AnimatePresence mode="popLayout">
+              {displayJobs.map((job, i) => (
+                <motion.article
+                  key={job.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.06 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -2 }}
+                  className={`relative rounded-2xl p-6 border transition-all duration-300 cursor-pointer group ${
+                    job.featured
+                      ? 'bg-white/4 border-teal-500/25 hover:border-teal-500/45 hover:bg-white/6'
+                      : 'bg-white/3 border-white/7 hover:border-white/14 hover:bg-white/5'
+                  }`}
+                >
+                  {/* Featured badge */}
+                  {job.featured && (
+                    <div className="absolute top-0 left-6 -translate-y-1/2">
+                      <span className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-md shadow-teal-500/20">
                         Featured
                       </span>
-                    )}
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {job.title}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-1" />
-                        {job.company}
+                    </div>
+                  )}
+
+                  {/* Top row */}
+                  <div className="flex items-start gap-4">
+                    {/* Company avatar */}
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700/80 to-slate-800 border border-white/8 flex items-center justify-center flex-shrink-0">
+                      <span className="text-teal-300 text-xs font-black tracking-wider">
+                        {job.companyAbbr}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 className="text-white font-bold text-lg leading-tight">
+                          {job.title}
+                        </h3>
+                        {aiRanked && (
+                          <span className="flex items-center gap-1 bg-teal-500/12 border border-teal-500/20 text-teal-400 text-xs px-2.5 py-0.5 rounded-full">
+                            <Sparkles className="h-3 w-3" />
+                            {job.aiMatch}% match
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {job.location}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {job.posted}
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                        <span className="flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5" />
+                          {job.company}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {job.flag} {job.location}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          {job.posted}
+                        </span>
                       </div>
                     </div>
+
+                    {/* Save button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleSave(job.id)
+                      }}
+                      className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${
+                        saved.includes(job.id)
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                          : 'bg-white/5 text-slate-600 hover:text-slate-400 border border-white/8'
+                      }`}
+                    >
+                      <Heart
+                        className={`h-4 w-4 ${saved.includes(job.id) ? 'fill-current' : ''}`}
+                      />
+                    </button>
                   </div>
-                  
-                  <button
-                    onClick={() => toggleSaveJob(job.id)}
-                    className={`ml-4 p-2 rounded-lg transition-colors ${
-                      savedJobs.includes(job.id)
-                        ? 'bg-red-100 text-red-600'
-                        : 'bg-gray-100 text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    <Heart className={`h-5 w-5 ${savedJobs.includes(job.id) ? 'fill-current' : ''}`} />
-                  </button>
-                </div>
-                
-                <p className="text-gray-600 mb-4">{job.description}</p>
-                
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {job.requirements.map((req) => (
-                    <span key={req} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                      {req}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-gray-600">{job.type}</span>
-                    <span className="text-gray-600">{job.experience}</span>
-                    <div className="flex items-center text-green-600 font-semibold">
-                      <DollarSign className="h-4 w-4" />
-                      {job.salary}
+
+                  {/* Description */}
+                  <p className="text-slate-400 text-sm mt-4 mb-4 leading-relaxed">
+                    {job.description}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {job.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs bg-white/4 border border-white/8 text-slate-400 px-3 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Footer row */}
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-3 text-sm flex-wrap">
+                      <span className="text-slate-500 bg-white/4 border border-white/7 px-3 py-1 rounded-full">
+                        {job.type}
+                      </span>
+                      <span className="text-slate-500 bg-white/4 border border-white/7 px-3 py-1 rounded-full">
+                        {job.experience}
+                      </span>
+                      <span className="text-emerald-400 font-bold">{job.salary}</span>
                     </div>
+                    <Link
+                      href={`/careers/${job.id}`}
+                      className="flex items-center gap-1 text-teal-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-2 group-hover:translate-x-0"
+                    >
+                      View role <ChevronRight className="h-4 w-4" />
+                    </Link>
                   </div>
-                  
-                  <Link
-                    href={`/careers/${job.id}`}
-                    className="inline-flex items-center text-teal-600 hover:text-teal-700 font-semibold"
-                  >
-                    View Details
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-            
+                </motion.article>
+              ))}
+            </AnimatePresence>
+
+            {/* Load more */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-center pt-8"
+              className="text-center pt-4"
             >
-              <button className="bg-teal-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors">
-                Load More Jobs
-              </button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                className="border border-teal-500/25 text-teal-400 px-10 py-4 rounded-xl font-bold hover:bg-teal-500/8 hover:border-teal-500/40 transition-all duration-200"
+              >
+                Load More Opportunities
+              </motion.button>
             </motion.div>
           </div>
         </div>
