@@ -8,9 +8,8 @@ const contactMethods = [
     icon: Phone,
     title: 'Phone',
     details: [
-      { label: 'Nigeria', value: '+234 123 456 7890' },
-      { label: 'UAE', value: '+971 4 123 4567' },
-      { label: 'Saudi Arabia', value: '+966 11 123 4567' },
+      { label: 'Nigeria', value: '+234 816 563 4195' },
+      { label: 'United States', value: '+1 (929) 419-2327' },
     ],
   },
   {
@@ -26,7 +25,7 @@ const contactMethods = [
     icon: MessageSquare,
     title: 'Live Chat',
     details: [
-      { label: 'WhatsApp', value: '+234 123 456 7890' },
+      { label: 'WhatsApp', value: '+234 816 563 4195' },
       { label: 'Website Chat', value: 'Available 24/7' },
     ],
   },
@@ -121,7 +120,7 @@ export function ContactInfo() {
           our priority support team is available.
         </p>
         <a
-          href="https://wa.me/2341234567890"
+          href="https://wa.me/2348165634195"
           className="inline-flex items-center bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
         >
           <MessageSquare className="h-5 w-5 mr-2" />

@@ -7,32 +7,24 @@ const offices = [
   {
     country: 'Nigeria',
     city: 'Lagos',
-    address: '123 Victoria Island, Lagos State, Nigeria',
-    phone: '+234 123 456 7890',
-    email: 'lagos@elabsolutions.com',
+    // ELAB Solutions Consult International Limited — Nigeria · RC 8092592 (CAMA 2020)
+    address: 'Ajah, Lagos, Nigeria',
+    phone: '+234 816 563 4195',
+    email: 'headoffice@elabsolution.org',
     hours: 'Mon-Fri: 8:00 AM - 6:00 PM WAT',
     mapUrl: '#',
     flag: '🇳🇬',
   },
   {
-    country: 'United Arab Emirates',
-    city: 'Dubai',
-    address: '456 Business Bay, Dubai, UAE',
-    phone: '+971 4 123 4567',
-    email: 'dubai@elabsolutions.com',
-    hours: 'Sun-Thu: 9:00 AM - 6:00 PM GST',
+    country: 'United States',
+    city: 'Lexington',
+    // ELAB Solutions International LLC — Kentucky, USA · No. 1352388
+    address: 'Lexington, Kentucky, USA',
+    phone: '+1 (929) 419-2327',
+    email: 'headoffice@elabsolution.org',
+    hours: 'Mon-Fri: 9:00 AM - 6:00 PM EST',
     mapUrl: '#',
-    flag: '🇦🇪',
-  },
-  {
-    country: 'Saudi Arabia',
-    city: 'Riyadh',
-    address: '789 King Fahd Road, Riyadh, KSA',
-    phone: '+966 11 123 4567',
-    email: 'riyadh@elabsolutions.com',
-    hours: 'Sun-Thu: 8:00 AM - 5:00 PM AST',
-    mapUrl: '#',
-    flag: '🇸🇦',
+    flag: '🇺🇸',
   },
 ]
 
@@ -51,12 +43,12 @@ export function OfficeLocations() {
             Our Office Locations
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Visit us at any of our offices across Africa and the Middle East. 
-            Our teams are ready to assist you with your healthcare career journey.
+            Two offices, one team — Lagos and Lexington. Reach us at either,
+            and we will help you with your healthcare career journey.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {offices.map((office, index) => (
             <motion.div
               key={office.city}
@@ -136,7 +128,7 @@ export function OfficeLocations() {
             you with the best possible service. Contact us to arrange your visit.
           </p>
           <a
-            href="tel:+2341234567890"
+            href="tel:+2348165634195"
             className="inline-flex items-center justify-center bg-primary-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
           >
             Schedule an Appointment

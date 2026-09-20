@@ -123,7 +123,7 @@ export function Footer() {
               <li className="flex items-center">
                 <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
                 <a href="tel:+234123456789" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  +234 123 456 789
+                  +234 816 563 4195
                 </a>
               </li>
               <li className="flex items-center">

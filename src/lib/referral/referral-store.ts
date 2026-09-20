@@ -742,7 +742,7 @@ export const useReferralStore = create<ReferralStore>()(
             firstName: 'Sarah',
             lastName: 'Johnson',
             email: 'sarah.johnson@example.com',
-            phone: '+1 (555) 123-4567',
+            phone: '+1 (929) 419-2327',
             country: 'United States',
             profession: 'Registered Nurse',
             tier: ReferralTier.CHAMPION,

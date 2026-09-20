@@ -62,7 +62,7 @@ export function CTASection() {
             <p className="text-sm">
               Questions? Call us at{' '}
               <a href="tel:+234123456789" className="underline hover:text-white transition-colors">
-                +234 123 456 789
+                +234 816 563 4195
               </a>{' '}
               or email{' '}
               <a href="mailto:info@elabsolutions.com" className="underline hover:text-white transition-colors">

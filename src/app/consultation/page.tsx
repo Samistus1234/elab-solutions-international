@@ -377,7 +377,7 @@ export default function ConsultationPage() {
                   📧 consultations@elabsolutions.com
                 </a>
                 <a href="https://wa.me/1234567890" className="block hover:text-blue-200">
-                  📱 WhatsApp: +1 (555) 123-4567
+                  📱 WhatsApp: +1 (929) 419-2327
                 </a>
               </div>
             </div>
