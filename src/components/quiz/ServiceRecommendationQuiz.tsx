@@ -644,7 +644,7 @@ SUMMARY:
 
 Contact eLab Solutions:
 Email: support@elabsolutions.com
-Phone: +1 (555) 123-4567
+Phone: +1 (929) 419-2327
 Website: https://elabsolutions.com
                 `], { type: 'text/plain' });
                 element.href = URL.createObjectURL(file);

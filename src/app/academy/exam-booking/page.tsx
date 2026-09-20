@@ -26,7 +26,6 @@ const examCategories = {
         bookingFee: '$75',
         description: 'Medical licensing exam for Dubai healthcare professionals',
         eligibility: ['Medical degree', 'Good standing certificate', 'Experience certificate'],
-        nextDates: ['2025-09-05', '2025-09-12', '2025-09-19', '2025-09-26'],
         locations: ['Dubai', 'Abu Dhabi', 'Sharjah', 'International Centers']
       },
       {
@@ -40,7 +39,6 @@ const examCategories = {
         bookingFee: '$75',
         description: 'Medical licensing exam for Abu Dhabi healthcare professionals',
         eligibility: ['Medical degree', 'Good standing certificate', 'Experience certificate'],
-        nextDates: ['2025-09-03', '2025-09-10', '2025-09-17', '2025-09-24'],
         locations: ['Abu Dhabi', 'Dubai', 'Al Ain', 'International Centers']
       },
       {
@@ -54,7 +52,6 @@ const examCategories = {
         bookingFee: '$85',
         description: 'Saudi medical classification and licensing exam',
         eligibility: ['Medical degree', 'Saudi medical license application', 'Good standing'],
-        nextDates: ['2025-09-08', '2025-09-15', '2025-09-22', '2025-09-29'],
         locations: ['Riyadh', 'Jeddah', 'Dammam', 'International Centers']
       }
     ]
@@ -74,7 +71,6 @@ const examCategories = {
         bookingFee: '$50',
         description: 'US registered nurse licensing examination',
         eligibility: ['Nursing degree', 'State board eligibility', 'English proficiency'],
-        nextDates: ['2025-09-02', '2025-09-09', '2025-09-16', '2025-09-23'],
         locations: ['US Test Centers', 'International Centers']
       }
     ]
@@ -94,7 +90,6 @@ const examCategories = {
         bookingFee: '$60',
         description: 'UK nursing knowledge and competency test',
         eligibility: ['Nursing degree', 'NMC application', 'IELTS 7.0 overall'],
-        nextDates: ['2025-09-05', '2025-09-12', '2025-09-19', '2025-09-26'],
         locations: ['UK Test Centers', 'International Centers']
       }
     ]
@@ -343,19 +338,22 @@ export default function ExamBookingPage() {
                     </div>
                   </div>
 
-                  {/* Next Available Dates */}
+                  {/* Availability — deliberately not a hardcoded date list.
+                      Seats are released by the provider continuously, so any
+                      date printed here goes stale within weeks. */}
                   <div className="mb-6">
-                    <h4 className="font-semibold text-gray-900 mb-3">Next Available Dates:</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {exam.nextDates.slice(0, 4).map((date) => (
-                        <div key={date} className="bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-center text-sm">
-                          {new Date(date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </div>
-                      ))}
+                    <h4 className="font-semibold text-gray-900 mb-3">Availability</h4>
+                    <div className="flex items-start gap-3 rounded-lg bg-blue-50 px-4 py-3">
+                      <Calendar className="h-4 w-4 mt-0.5 flex-none text-blue-700" />
+                      <p className="text-sm text-blue-800">
+                        {exam.platform} releases seats continuously and they fill quickly, so
+                        we confirm live availability on your behalf rather than publish dates
+                        here.{' '}
+                        <Link href="/academy/exam-booking/book" className="font-semibold underline">
+                          Request a date
+                        </Link>{' '}
+                        and we will send you the nearest openings.
+                      </p>
                     </div>
                   </div>
 
@@ -491,12 +489,12 @@ export default function ExamBookingPage() {
             <div>
               <Phone className="h-8 w-8 mx-auto mb-3 text-green-400" />
               <div className="font-semibold mb-1">24/7 Hotline</div>
-              <div className="text-gray-300">+1 (555) 123-EXAM</div>
+              <div className="text-gray-300">+1 (929) 419-2327</div>
             </div>
             <div>
               <Users className="h-8 w-8 mx-auto mb-3 text-purple-400" />
               <div className="font-semibold mb-1">WhatsApp Chat</div>
-              <div className="text-gray-300">+1 (555) 123-4567</div>
+              <div className="text-gray-300">+1 (929) 419-2327</div>
             </div>
           </div>
         </div>

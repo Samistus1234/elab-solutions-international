@@ -541,7 +541,7 @@ export default function ServiceDetailPage({ params }: ServiceDetailPageProps) {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center">
                   <Phone className="h-4 w-4 mr-2" />
-                  <span>+1 (555) 123-4567</span>
+                  <span>+1 (929) 419-2327</span>
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-4 w-4 mr-2" />
